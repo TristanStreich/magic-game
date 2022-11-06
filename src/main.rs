@@ -1,3 +1,5 @@
+mod hex_utils;
+
 use bevy::prelude::*;
 
 fn main() {
@@ -6,6 +8,26 @@ fn main() {
     .add_plugin(HelloPlugin)
     .run();
 }
+
+
+/*
+fn spawn_special_entity(
+    mut commands: Commands,
+) {
+    // create an entity that does not use one of the common Bevy bundles,
+    // but still needs transforms and visibility
+    commands.spawn()
+        .insert(ComponentA)
+        .insert(ComponentB)
+        .insert_bundle(SpatialBundle {
+            transform: Transform::from_scale(Vec3::splat(3.0)),
+            visibility: Visibility {
+                is_visible: false,
+            },
+            ..Default::default()
+        });
+}
+ */
 
 pub struct HelloPlugin;
 
