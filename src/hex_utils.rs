@@ -53,73 +53,35 @@ impl Plugin for HexGrid {
     }
 }
 
-#[derive(Component, Inspectable)]
-pub struct HexTile;
-
 
 fn init_grid(
     mut commands: Commands,
     assets: Res<AssetServer>
 ) {
     for hex_coord in HexCoord(0,0).in_range(HEX_GRID_RADIUS).into_iter() {
-        spawn_hex_tile_at(hex_coord, &mut commands, &assets)
+        HexTile::spawn_at(hex_coord, &mut commands, &assets)
     }
 }
 
 
-fn spawn_hex_tile_at(
-    hex_coord: HexCoord,
-    commands: &mut Commands,
-    assets: &Res<AssetServer>
-) {
-    let (x, y) = hex_coord.to_world();
-    commands.spawn_bundle(SpriteBundle {
-        texture: assets.load("hex_cropped.png"),
-        transform: Transform::from_xyz(x, y, 0.0)
-                    .with_scale(Vec3::new(HEX_SPRITE_SCALE, HEX_SPRITE_SCALE, 1.0)),
-        ..default()
-    })
-    .insert(Name::new("HexTile"))
-    .insert(hex_coord)
-    .insert(HexTile);
-}
+#[derive(Component, Inspectable)]
+pub struct HexTile;
 
-// Example code for loading a sprite map
-/*
-fn spawn_hex_tile(mut commands: Commands, assets: Res<AssetServer>,) {
-    let mut sprite = TextureAtlasSprite::new(1);
-    sprite.color = Color::rgb(0.3, 0.3, 0.3);
-    sprite.custom_size = Some(Vec2::splat(1.0));
-
-    let player = commands
-        .spawn_bundle(SpriteSheetBundle {
-            sprite: sprite,
-            texture_atlas: hex_sprite.0.clone(),
-            transform: Transform {
-                translation: Vec3::new(0.0, 0.0, 0.0),
-                ..Default::default()
-            },
-            ..Default::default()
+impl HexTile {
+    fn spawn_at(
+        hex_coord: HexCoord,
+        commands: &mut Commands,
+        assets: &Res<AssetServer>
+    ) {
+        let (x, y) = hex_coord.to_world();
+        commands.spawn_bundle(SpriteBundle {
+            texture: assets.load("hex_cropped.png"),
+            transform: Transform::from_xyz(x, y, 0.0)
+                        .with_scale(Vec3::new(HEX_SPRITE_SCALE, HEX_SPRITE_SCALE, 1.0)),
+            ..default()
         })
         .insert(Name::new("HexTile"))
-        .id();
+        .insert(hex_coord)
+        .insert(HexTile);
+    }
 }
-
-struct HexSprite(Handle<TextureAtlas>);
-
-fn load_hex_sprite(
-    mut commands: Commands,
-    assets: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>
-){
-    let image = assets.load("hex.png");
-    let texture_atlas = TextureAtlas::from_grid(
-        image,
-        Vec2::splat(9.0),
-        1,
-        1
-    );
-    let atlas_handle = texture_atlases.add(texture_atlas);
-    commands.insert_resource(HexSprite(atlas_handle));
-}
-*/
