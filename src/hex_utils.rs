@@ -17,7 +17,7 @@ pub const HEX_SPRITE_SCALE: f32 = HEX_SMALL_DIAMETER * 0.00275;
 type WorldCoord = (f32, f32);
 
 #[derive(Component, Inspectable, Debug)]
-pub struct HexCoord(i32,i32);
+pub struct HexCoord(pub i32, pub i32);
 
 impl HexCoord {
 
@@ -31,6 +31,10 @@ impl HexCoord {
         let x = HEX_CIRCUMRADIUS * f32::sqrt(3.0) * ((self.0 as f32) + (self.1 as f32) / 2.0);
         let y = HEX_CIRCUMRADIUS * (3.0/2.0) * (self.1 as f32);
         return (x,y);
+    }
+
+    pub fn clone(&self) -> Self {
+        HexCoord(self.0,self.1)
     }
 
     // returns all the hex coords that are
