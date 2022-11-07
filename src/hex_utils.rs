@@ -7,7 +7,7 @@ pub const HEX_CIRCUMRADIUS: f32 = HEX_INNER_RADIUS * 1.154700538; //sqrt(4/3)
 pub const HEX_SMALL_DIAMETER: f32 = 2.0 * HEX_INNER_RADIUS;
 pub const HEX_LARGE_DIAMETER: f32 = 2.0 * HEX_CIRCUMRADIUS;
 
-pub const HEX_GRID_RADIUS: i32 = 1;
+pub const HEX_GRID_RADIUS: i32 = 3;
 
 pub const HEX_SPRITE_SCALE: f32 = HEX_SMALL_DIAMETER * 0.00275;
 
@@ -17,8 +17,8 @@ pub struct HexCoord(i32,i32);
 
 impl HexCoord {
     pub fn to_world(&self) -> WorldCoord {
-        let x = HEX_SMALL_DIAMETER * ((self.0 as f32) - (self.1 as f32) / 2.0);
-        let y = HEX_SMALL_DIAMETER * (f32::sqrt(3.0)/2.0) * (self.1 as f32);
+        let x = HEX_CIRCUMRADIUS * f32::sqrt(3.0) * ((self.0 as f32) + (self.1 as f32) / 2.0);
+        let y = HEX_CIRCUMRADIUS * (3.0/2.0) * (self.1 as f32);
         return (x,y);
     }
 
@@ -26,10 +26,8 @@ impl HexCoord {
     // within radius number of tiles
     pub fn in_range(&self, radius: i32) -> Vec<HexCoord> {
         let mut within = Vec::new();
-        // for y in -radius..radius+1 {
-        //     for x in 0..1{
         for x in -radius..radius+1 {
-            for y in max(-radius, (-x)-radius)-1..min(radius,(-x)+radius) {
+            for y in max(-radius, (-x)-radius)..min(radius,(-x)+radius)+1 {
                 within.push(HexCoord(x+self.0, y+self.1));
             }
         }
@@ -41,8 +39,8 @@ type WorldCoord = (f32, f32);
 
 // wrong
 pub fn world_to_hex(world_coord: WorldCoord) -> HexCoord {
-    let x = (world_coord.0 + (world_coord.1) / f32::sqrt(3.0)) / HEX_SMALL_DIAMETER;
-    let y = ((2.0/f32::sqrt(3.0)) * world_coord.1) / HEX_SMALL_DIAMETER;
+    let x = (f32::sqrt(3.0)*world_coord.0 - world_coord.1) / 3.0 / HEX_CIRCUMRADIUS;
+    let y = ((2.0/3.0) * world_coord.1) / HEX_CIRCUMRADIUS;
     return HexCoord(x.round() as i32, y.round() as i32);
 }
 
@@ -64,7 +62,6 @@ fn init_grid(
     assets: Res<AssetServer>
 ) {
     for hex_coord in HexCoord(0,0).in_range(HEX_GRID_RADIUS).into_iter() {
-        println!("{:?}",hex_coord);
         spawn_hex_tile_at(hex_coord, &mut commands, &assets)
     }
 }
