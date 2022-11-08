@@ -109,3 +109,27 @@ impl HexTile {
         .id()
     }
 }
+
+
+struct HexSpriteSheet(Handle<TextureAtlas>);
+
+fn load_hex_sprite_sheet(
+    mut commands: Commands,
+    assets: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+) {
+    let image = assets.load("hex_sprite_sheet.png");
+    let atlas =
+        TextureAtlas::from_grid_with_padding(
+            image,
+            Vec2::new(50.0,70.0),
+            11,
+            2,
+            Vec2::splat(8.0),
+            Vec2::new(75.0,60.0)
+        );
+
+    let atlas_handle = texture_atlases.add(atlas);
+
+    commands.insert_resource(HexSpriteSheet(atlas_handle));
+}
