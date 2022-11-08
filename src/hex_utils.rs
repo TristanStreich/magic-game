@@ -14,7 +14,7 @@ pub const HEX_SPRITE_SCALE: f32 = HEX_SMALL_DIAMETER * 0.00275;
 
 
 
-type WorldCoord = (f32, f32);
+pub type WorldCoord = (f32, f32);
 
 #[derive(Component, Inspectable, Debug)]
 pub struct HexCoord(pub i32, pub i32);
