@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::Inspectable;
 use std::cmp::{max,min};
-use std::collections::HashMap;
 
 pub const HEX_INNER_RADIUS: f32 = 40.0;
 pub const HEX_CIRCUMRADIUS: f32 = HEX_INNER_RADIUS * 1.154700538; //sqrt(4/3)
@@ -16,7 +15,7 @@ pub const HEX_SPRITE_SCALE: f32 = HEX_SMALL_DIAMETER * 0.00275;
 
 pub type WorldCoord = (f32, f32);
 
-#[derive(Component, Inspectable, Debug)]
+#[derive(Component, Inspectable, Debug, Copy, Clone)]
 pub struct HexCoord(pub i32, pub i32);
 
 impl HexCoord {
@@ -31,10 +30,6 @@ impl HexCoord {
         let x = HEX_CIRCUMRADIUS * f32::sqrt(3.0) * ((self.0 as f32) + (self.1 as f32) / 2.0);
         let y = HEX_CIRCUMRADIUS * (3.0/2.0) * (self.1 as f32);
         return (x,y);
-    }
-
-    pub fn clone(&self) -> Self {
-        HexCoord(self.0,self.1)
     }
 
     // returns all the hex coords that are
@@ -61,7 +56,7 @@ pub struct HexGridBundle;
 impl Plugin for HexGridBundle {
     fn build(&self, app: &mut App) {
         app
-        .add_startup_system(HexGrid::spawn);
+        .add_startup_system_to_stage(StartupStage::PreStartup, HexGrid::spawn);
     }
 }
 
