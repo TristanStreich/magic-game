@@ -50,6 +50,12 @@ impl HexCoord {
     }
 }
 
+impl PartialEq for HexCoord {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0 && self.1 == other.1
+    }
+}
+
 pub struct HexGridBundle;
 
 impl Plugin for HexGridBundle {

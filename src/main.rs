@@ -33,27 +33,34 @@ fn init_highlighted(mut commands: Commands) {
 
 fn highlight_on_click(
     mut commands: Commands,
-    mut query: Query<(&HexTile, &HexCoord, &mut Handle<Image>)>,
+    mut query: Query<(&HexCoord, &mut Handle<Image>), With<HexTile>>,
     assets: Res<AssetServer>,
     mut highlighted: ResMut<Highlighted>,
     buttons: Res<Input<MouseButton>>,
     mouse_pos: Res<MousePos>,
 ) {
     if buttons.just_pressed(MouseButton::Left) {
-        println!("{:?}", mouse_pos.0);
-        println!("{:?}", HexCoord::from_world(mouse_pos.0));
-        // Left button was pressed
-        for (tile, coord, mut image) in query.into_iter() {
-            if coord.0 == 0 && coord.1 == 0 { //TODO: use mouse position for this
-                highlighted.0 = match highlighted.0 {
-                    Some(_) => None,
-                    None => Some(coord.clone())
-                };
-                println!("Hightlighted = {:?}", highlighted.0);
-                //TODO: change sprite of highlighted
-                // image = assets.load("hex.png");
-            }
+        let mouse_hex = HexCoord::from_world(mouse_pos.0);
+        match &highlighted.0 {
+            Some(high_coord) => {
+                if (*high_coord == mouse_hex) {
+                    highlighted.0 = None;
+                } else {
+                    highlighted.0 = Some(mouse_hex);
+                }
+            },
+            None => highlighted.0 = Some(mouse_hex)
         }
+        println!("Hightlighted = {:?}", highlighted.0);
+
+        // for (coord, mut image) in query.into_iter() {
+        //     if *coord ==  { 
+
+        //         break;
+        //         //TODO: change sprite of highlighted
+        //         // image = assets.load("hex.png");
+        //     }
+        // }
     }
 }
 
