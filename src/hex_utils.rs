@@ -23,7 +23,28 @@ impl HexCoord {
     pub fn from_world(world_coord: WorldCoord) -> HexCoord {
         let x = (f32::sqrt(3.0)*world_coord.0 - world_coord.1) / 3.0 / HEX_CIRCUMRADIUS;
         let y = ((2.0/3.0) * world_coord.1) / HEX_CIRCUMRADIUS;
-        return HexCoord(x.round() as i32, y.round() as i32);
+        HexCoord::from_floating((x,y))
+    }
+
+    /*
+    def axial_round(x, y):
+    xgrid = round(x); ygrid = round(y)
+    x -= xgrid; y -= ygrid # remainder
+    if abs(x) >= abs(y):
+        return [xgrid + round(x + 0.5*y), ygrid]
+    else:
+        return [xgrid, ygrid + round(y + 0.5*x)] */
+    pub fn from_floating((fx, fy): (f32, f32)) -> HexCoord {
+        let mut x = fx.round();
+        let mut y = fy.round();
+        let rem_x = fx - x;
+        let rem_y = fy - y;
+        if rem_x.abs() >= rem_y.abs() {
+            x += (rem_x + 0.5*rem_y).round();
+        } else {
+            y += (rem_y + 0.5*rem_x).round();
+        }
+        HexCoord(x as i32, y as i32)
     }
 
     pub fn to_world(&self) -> WorldCoord {
