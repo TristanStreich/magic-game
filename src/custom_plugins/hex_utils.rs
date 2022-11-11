@@ -24,7 +24,7 @@ impl HexCoord {
     pub fn for_carter(&self) -> Vec3 {
         let x = HEX_CIRCUMRADIUS * f32::sqrt(3.0) * ((self.0 as f32) + (self.1 as f32) / 2.0);
         let y = HEX_CIRCUMRADIUS * (3.0/2.0) * (self.1 as f32);
-        return Vec3 { x: x, y: y, z: 0.0 };
+        return Vec3 { x: x, y: 0.0, z: y };
     }
 
     pub fn to_world(&self) -> WorldCoord {
@@ -99,7 +99,7 @@ impl HexTile {
         commands.spawn_bundle(SpriteBundle {
             texture: assets.load("hex.png"),
             transform: Transform::from_xyz(x, y, 0.0)
-                        .with_scale(Vec3::new(HEX_SPRITE_SCALE, HEX_SPRITE_SCALE, 1.0)),
+            .with_scale(Vec3::new(HEX_SPRITE_SCALE, HEX_SPRITE_SCALE, 1.0)),
             ..default()
         })
         .insert(Name::new("HexTile"))
@@ -131,11 +131,11 @@ pub fn setup_3d_hex_grid(
                 parent.spawn_bundle(PbrBundle {
                     mesh: hex_3d.clone(),
                     material: white_material.clone(),
-                    transform: {
-                        let mut transform = Transform::from_translation(Vec3::new(-0.2, 0., -1.9));
-                        transform.apply_non_uniform_scale(Vec3::new(0.2, 0.2, 0.2));
-                        transform
-                    },
+                    // transform: {
+                    //     let mut transform = Transform::from_translation(Vec3::new(-0.2, 0., -1.9));
+                    //     transform.apply_non_uniform_scale(Vec3::new(0.2, 0.2, 0.2));
+                    //     transform
+                    // },
                     ..Default::default()
                 });
             });

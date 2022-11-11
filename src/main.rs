@@ -9,11 +9,11 @@ fn main() {
     .add_plugins(DefaultPlugins)
     .add_startup_system(setup_camera)
     .add_startup_system(setup_3d_hex_grid)
-    // .add_plugin(PlayerPlugin)
-    // .insert_resource(MovementSettings {
-    //     sensitivity: 0.00015, // default: 0.00012
-    //     speed: 12.0,          // default: 12.0
-    // })
+    .add_plugin(PlayerPlugin)
+    .insert_resource(MovementSettings {
+        sensitivity: 0.00015, // default: 0.00012
+        speed: 12.0,          // default: 12.0
+    })
 
     .run();
 }
