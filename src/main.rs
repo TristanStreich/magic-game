@@ -1,11 +1,13 @@
 mod hex_utils;
 mod debug;
 
-use hex_utils::{HexGridBundle, HexTile, HexCoord, WorldCoord};
+use hex_utils::{HexGridBundle, HexCoord, WorldCoord, HEX_SPRITE_SCALE, HexGrid};
 use debug::{DebugPlugin};
 
 use bevy::prelude::*;
+use bevy_inspector_egui::Inspectable;
 use bevy::render::camera::RenderTarget;
+
 
 fn main() {
     App::new()
@@ -27,23 +29,43 @@ fn spawn_camera(mut commands: Commands) {
 
 pub struct Highlighted(Option<HexCoord>);
 
-fn init_highlighted(mut commands: Commands) {
+fn init_highlighted(
+    mut commands: Commands,
+    assets: Res<AssetServer>,
+    query: Query<Entity, With<HexGrid>>
+) {
     commands.insert_resource(Highlighted(None));
+    
+    let (x, y) = HexCoord(0,0).to_world();
+    let highlighted_hex = commands.spawn_bundle(SpriteBundle {
+        texture: assets.load("hex_highlighted.png"),
+        transform: Transform::from_xyz(x, y, -1.0)
+                    .with_scale(Vec3::new(HEX_SPRITE_SCALE, HEX_SPRITE_SCALE, 1.0)),
+        ..default()
+    })
+    .insert(Name::new("Highlighted Hex"))
+    .insert(HighlightedHex)
+    .id();
+
+    commands.entity(query.single()).add_child(highlighted_hex);
 }
 
+#[derive(Component, Inspectable)]
+pub struct HighlightedHex;
+
 fn highlight_on_click(
-    mut commands: Commands,
-    mut query: Query<(&HexCoord, &mut Handle<Image>), With<HexTile>>,
-    assets: Res<AssetServer>,
+    mut query: Query<&mut Transform, With<HighlightedHex>>,
     mut highlighted: ResMut<Highlighted>,
     buttons: Res<Input<MouseButton>>,
     mouse_pos: Res<MousePos>,
 ) {
     if buttons.just_pressed(MouseButton::Left) {
+        let mut high_transform = query.single_mut();
+
         let mouse_hex = HexCoord::from_world(mouse_pos.0);
         match &highlighted.0 {
             Some(high_coord) => {
-                if (*high_coord == mouse_hex) {
+                if *high_coord == mouse_hex {
                     highlighted.0 = None;
                 } else {
                     highlighted.0 = Some(mouse_hex);
@@ -51,16 +73,16 @@ fn highlight_on_click(
             },
             None => highlighted.0 = Some(mouse_hex)
         }
-        println!("Hightlighted = {:?}", highlighted.0);
-
-        // for (coord, mut image) in query.into_iter() {
-        //     if *coord ==  { 
-
-        //         break;
-        //         //TODO: change sprite of highlighted
-        //         // image = assets.load("hex.png");
-        //     }
-        // }
+        match &highlighted.0 {
+            Some(high_coord) => {
+                let (x, y) = high_coord.to_world();
+                high_transform.translation = Vec3::new(x,y,2.0);
+            },
+            None => {
+                let (x, y) = HexCoord(0,0).to_world();
+                high_transform.translation = Vec3::new(x,y,-1.0);
+            } 
+        }
     }
 }
 
@@ -76,10 +98,9 @@ fn init_mouse_pos(
 }
 
 fn update_mouse_pos(
-    mut commands: Commands,
-    wnds: Res<Windows>,
-    q_camera: Query<(&Camera, &GlobalTransform)>,
     mut cur_mouse_pos: ResMut<MousePos>,
+    wnds: Res<Windows>,
+    q_camera: Query<(&Camera, &GlobalTransform)>
 ) {
     let new_mouse_pos = get_mouse_pos(wnds, q_camera);
     cur_mouse_pos.0 = new_mouse_pos;
