@@ -2,6 +2,9 @@ use bevy::prelude::*;
 use bevy_inspector_egui::Inspectable;
 use std::cmp::{max,min};
 
+use crate::utils::WorldCoord;
+use crate::utils::mouse::MousePos;
+
 pub const HEX_INNER_RADIUS: f32 = 40.0;
 pub const HEX_CIRCUMRADIUS: f32 = HEX_INNER_RADIUS * 1.154700538; //sqrt(4/3)
 pub const HEX_SMALL_DIAMETER: f32 = 2.0 * HEX_INNER_RADIUS;
@@ -11,9 +14,16 @@ pub const HEX_GRID_RADIUS: i32 = 5;
 
 pub const HEX_SPRITE_SCALE: f32 = HEX_SMALL_DIAMETER * 0.00275;
 
+pub struct HexPlugin;
 
-
-pub type WorldCoord = (f32, f32);
+impl Plugin for HexPlugin {
+    fn build(&self, app: &mut App) {
+        app
+        .add_startup_system_to_stage(StartupStage::PreStartup, HexGrid::spawn)
+        .add_startup_system(init_highlighted)
+        .add_system(highlight_on_click);
+    }
+}
 
 #[derive(Component, Inspectable, Debug, Copy, Clone)]
 pub struct HexCoord(pub i32, pub i32);
@@ -72,15 +82,6 @@ impl PartialEq for HexCoord {
     }
 }
 
-pub struct HexGridBundle;
-
-impl Plugin for HexGridBundle {
-    fn build(&self, app: &mut App) {
-        app
-        .add_startup_system_to_stage(StartupStage::PreStartup, HexGrid::spawn);
-    }
-}
-
 #[derive(Component, Inspectable)]
 pub struct HexGrid;
 
@@ -123,5 +124,64 @@ impl HexTile {
         .insert(hex_coord)
         .insert(HexTile)
         .id()
+    }
+}
+
+pub struct Highlighted(Option<HexCoord>);
+
+fn init_highlighted(
+    mut commands: Commands,
+    assets: Res<AssetServer>,
+    query: Query<Entity, With<HexGrid>>
+) {
+    commands.insert_resource(Highlighted(None));
+    
+    let (x, y) = HexCoord(0,0).to_world();
+    let highlighted_hex = commands.spawn_bundle(SpriteBundle {
+        texture: assets.load("hex_highlighted.png"),
+        transform: Transform::from_xyz(x, y, -1.0)
+                    .with_scale(Vec3::new(HEX_SPRITE_SCALE, HEX_SPRITE_SCALE, 1.0)),
+        ..default()
+    })
+    .insert(Name::new("Highlighted Hex"))
+    .insert(HighlightedHex)
+    .id();
+
+    commands.entity(query.single()).add_child(highlighted_hex);
+}
+
+#[derive(Component, Inspectable)]
+pub struct HighlightedHex;
+
+fn highlight_on_click(
+    mut query: Query<&mut Transform, With<HighlightedHex>>,
+    mut highlighted: ResMut<Highlighted>,
+    buttons: Res<Input<MouseButton>>,
+    mouse_pos: Res<MousePos>,
+) {
+    if buttons.just_pressed(MouseButton::Left) {
+        let mut high_transform = query.single_mut();
+
+        let mouse_hex = HexCoord::from_world(mouse_pos.get_world_coords());
+        match &highlighted.0 {
+            Some(high_coord) => {
+                if *high_coord == mouse_hex {
+                    highlighted.0 = None;
+                } else {
+                    highlighted.0 = Some(mouse_hex);
+                }
+            },
+            None => highlighted.0 = Some(mouse_hex)
+        }
+        match &highlighted.0 {
+            Some(high_coord) => {
+                let (x, y) = high_coord.to_world();
+                high_transform.translation = Vec3::new(x,y,2.0);
+            },
+            None => {
+                let (x, y) = HexCoord(0,0).to_world();
+                high_transform.translation = Vec3::new(x,y,-1.0);
+            } 
+        }
     }
 }
