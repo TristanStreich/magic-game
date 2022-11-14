@@ -11,7 +11,7 @@ pub struct HexPlugin;
 
 impl Plugin for HexPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system_to_stage(StartupStage::PreStartup, setup_3d_hex_grid);
+        app.add_startup_system_to_stage(StartupStage::PreStartup, HexGrid::spawn);
     }
 }
 
@@ -19,7 +19,7 @@ impl Plugin for HexPlugin {
 pub struct HexCoord(pub i32, pub i32);
 
 impl HexCoord {
-    pub fn for_carter(&self) -> Vec3 {
+    pub fn to_world(&self) -> Vec3 {
         let x = HEX_CIRCUMRADIUS * f32::sqrt(3.0) * ((self.0 as f32) + (self.1 as f32) / 2.0);
         let y = HEX_CIRCUMRADIUS * (3.0/2.0) * (self.1 as f32);
         return Vec3 { x: x, y: 0.0, z: y };
@@ -48,18 +48,43 @@ impl PartialEq for HexCoord {
     }
 }
 
-pub fn setup_3d_hex_grid(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    
-    let white_material = materials.add(Color::rgb(1., 0.8, 0.8).into());
-    let hex_3d: Handle<Mesh> = asset_server.load("hex.glb#Mesh0/Primitive0");
+#[derive(Component, Inspectable)]
+pub struct HexGrid;
 
-    for hex_coord in HexCoord(0,0).within_radius(HEX_GRID_RADIUS).into_iter() {
-        let position = hex_coord.for_carter();
+ impl HexGrid {
+    fn spawn(
+        mut commands: Commands,
+        assets: Res<AssetServer>,
+        mut materials: ResMut<Assets<StandardMaterial>>,
+    ) {
+        let tile_material = materials.add(Color::rgb(1., 0.8, 0.8).into());
+        let hex_tile_mesh: Handle<Mesh> = assets.load("hex.glb#Mesh0/Primitive0");
 
+        let mut tiles = Vec::new();
+        for hex_coord in HexCoord(0,0).within_radius(HEX_GRID_RADIUS).into_iter() {
+            let tile = HexTile::spawn_at(hex_coord, &mut commands, &hex_tile_mesh, &tile_material);
+            tiles.push(tile);
+        }
+        commands
+        .spawn_bundle(SpatialBundle{..default()})
+        .insert(Name::new("HexGrid"))
+        .insert(HexGrid)
+        .push_children(&tiles);
+    }
+ }
+
+
+#[derive(Component, Inspectable)]
+pub struct HexTile;
+
+impl HexTile {
+    fn spawn_at(
+        hex_coord: HexCoord,
+        commands: &mut Commands,
+        mesh: &Handle<Mesh>,
+        material: &Handle<StandardMaterial>
+    ) -> Entity {
+        let position = hex_coord.to_world();
         commands
             .spawn_bundle(PbrBundle {
                 transform: Transform::from_translation(position),
@@ -68,15 +93,14 @@ pub fn setup_3d_hex_grid(
             // Add children to the parent
             .with_children(|parent| {
                 parent.spawn_bundle(PbrBundle {
-                    mesh: hex_3d.clone(),
-                    material: white_material.clone(),
-                    // transform: {
-                    //     let mut transform = Transform::from_translation(Vec3::new(-0.2, 0., -1.9));
-                    //     transform.apply_non_uniform_scale(Vec3::new(0.2, 0.2, 0.2));
-                    //     transform
-                    // },
+                    mesh: mesh.clone(),
+                    material: material.clone(),
                     ..Default::default()
                 });
-            });
+            })
+            .insert(Name::new("HexTile"))
+            .insert(HexTile)
+            .insert(hex_coord)
+            .id()
     }
 }

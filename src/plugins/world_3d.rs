@@ -1,29 +1,17 @@
 pub mod config;
 pub mod debug;
-pub mod flying_camera;
+pub mod camera;
 pub mod hex;
 
-use bevy::prelude::App;
-use bevy::app::{Plugin, PluginGroup, PluginGroupBuilder};
-
-struct MovementPlugin;
-
-impl Plugin for MovementPlugin {
-    fn build(&self, app: &mut App) {
-        app.insert_resource(flying_camera::MovementSettings {
-            sensitivity: 0.00015, // default: 0.00012
-            speed: 12.0,          // default: 12.0
-        });
-    }
-}
+use bevy::app::{PluginGroup, PluginGroupBuilder};
 
 pub struct World3dPlugins;
 
 impl PluginGroup for World3dPlugins {
     fn build(&mut self, group: &mut PluginGroupBuilder) {
-        group.add(flying_camera::PlayerPlugin);
-        group.add(MovementPlugin);
-        group.add(hex::HexPlugin);
-        group.add(debug::DebugPlugin);
+        group
+        .add(camera::CameraPlugin)
+        .add(hex::HexPlugin)
+        .add(debug::DebugPlugin);
     }
 }
