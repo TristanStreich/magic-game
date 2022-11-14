@@ -1,18 +1,12 @@
-mod utils;
-
 use bevy::prelude::*;
 
-use utils::camera::CameraPlugin;
-use utils::debug::DebugPlugin;
-use utils::hex::HexPlugin;
-use utils::mouse::MousePlugin;
+use magic_game::plugins::world_2d::World2dPlugins;
+use magic_game::plugins::world_3d::World3dPlugins;
 
 fn main() {
     App::new()
     .add_plugins(DefaultPlugins)
-    .add_plugin(CameraPlugin)
-    .add_plugin(MousePlugin)
-    .add_plugin(HexPlugin)
-    .add_plugin(DebugPlugin)
+    .add_plugins(World3dPlugins)
     .run();
 }
+

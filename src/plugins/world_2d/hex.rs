@@ -2,8 +2,8 @@ use bevy::prelude::*;
 use bevy_inspector_egui::Inspectable;
 use std::cmp::{max,min};
 
-use crate::utils::WorldCoord;
-use crate::utils::mouse::MousePos;
+use crate::plugins::world_2d::WorldCoord;
+use crate::plugins::world_2d::mouse::MousePos;
 
 pub const HEX_INNER_RADIUS: f32 = 40.0;
 pub const HEX_CIRCUMRADIUS: f32 = HEX_INNER_RADIUS * 1.154700538; //sqrt(4/3)
