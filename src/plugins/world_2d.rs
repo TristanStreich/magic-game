@@ -1,7 +1,7 @@
-mod camera;
-mod debug;
-mod hex;
-mod mouse;
+pub mod camera;
+pub mod debug;
+pub mod hex;
+pub mod mouse;
 
 use bevy::app::{PluginGroup, PluginGroupBuilder};
 

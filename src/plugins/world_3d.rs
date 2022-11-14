@@ -1,5 +1,6 @@
-mod flying_camera;
-mod hex;
+pub mod debug;
+pub mod flying_camera;
+pub mod hex;
 
 use bevy::prelude::App;
 use bevy::app::{Plugin, PluginGroup, PluginGroupBuilder};
@@ -22,5 +23,6 @@ impl PluginGroup for World3dPlugins {
         group.add(flying_camera::PlayerPlugin);
         group.add(MovementPlugin);
         group.add(hex::HexPlugin);
+        group.add(debug::DebugPlugin);
     }
 }
