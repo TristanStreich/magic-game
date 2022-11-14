@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy::input::mouse::{MouseMotion, MouseWheel};
 use bevy_inspector_egui::Inspectable;
+use bevy_mod_picking::PickingCameraBundle;
 
 use crate::plugins::world_3d::config::*;
 
@@ -37,14 +38,16 @@ fn spawn_camera(mut commands: Commands) {
     let translation = Vec3::new(-2.0, 2.5, 5.0);
     let radius = translation.length();
 
-    commands.spawn_bundle(Camera3dBundle {
+    commands
+    .spawn_bundle(Camera3dBundle {
         transform: Transform::from_translation(translation)
             .looking_at(Vec3::ZERO, Vec3::Y),
-        ..Default::default()
-    }).insert(PanOrbitCamera {
+        ..Default::default()})
+    .insert(PanOrbitCamera {
         radius,
-        ..Default::default()
-    }).insert(Name::new("Game Camera"));
+        ..Default::default()})
+    .insert(Name::new("Game Camera"))
+    .insert_bundle(PickingCameraBundle::default());
 }
 
 // Camera Pan using WASD
