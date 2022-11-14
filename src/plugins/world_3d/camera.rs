@@ -1,8 +1,7 @@
 use bevy::prelude::*;
 use bevy::input::mouse::{MouseMotion, MouseWheel};
-use bevy::render::camera::Projection;
 
-use crate::config::camera::*;
+use crate::plugins::world_3d::config::*;
 
 pub struct CameraPlugin;
 impl Plugin for CameraPlugin {
@@ -20,16 +19,14 @@ impl Plugin for CameraPlugin {
 struct PanOrbitCamera {
     /// The "focus point" to orbit around. It is automatically updated when panning the camera
     pub focus: Vec3,
-    pub radius: f32,
-    pub upside_down: bool,
+    pub radius: f32
 }
 
 impl Default for PanOrbitCamera {
     fn default() -> Self {
         PanOrbitCamera {
             focus: Vec3::ZERO,
-            radius: 5.0,
-            upside_down: false,
+            radius: 5.0
         }
     }
 }
@@ -40,14 +37,13 @@ fn orbit_camera(
     mut ev_motion: EventReader<MouseMotion>,
     mut ev_scroll: EventReader<MouseWheel>,
     input_mouse: Res<Input<MouseButton>>,
-    mut query: Query<(&mut PanOrbitCamera, &mut Transform, &Projection)>,
+    mut query: Query<(&mut PanOrbitCamera, &mut Transform)>,
 ) {
     // change input mapping for orbit and panning here
     let orbit_button = MouseButton::Right;
 
     let mut rotation_move = Vec2::ZERO;
     let mut scroll = 0.0;
-    let mut orbit_button_changed = false;
 
     if input_mouse.pressed(orbit_button) {
         for ev in ev_motion.iter() {
@@ -57,26 +53,14 @@ fn orbit_camera(
     for ev in ev_scroll.iter() {
         scroll += ev.y;
     }
-    if input_mouse.just_released(orbit_button) || input_mouse.just_pressed(orbit_button) {
-        orbit_button_changed = true;
-    }
 
-    for (mut pan_orbit, mut transform, projection) in query.iter_mut() {
-        if orbit_button_changed {
-            // only check for upside down when orbiting started or ended this frame
-            // if the camera is "upside" down, panning horizontally would be inverted, so invert the input to make it correct
-            let up = transform.rotation * Vec3::Y;
-            pan_orbit.upside_down = up.y <= 0.0;
-        }
+    for (mut pan_orbit, mut transform) in query.iter_mut() {
 
         let mut any = false;
         if rotation_move.length_squared() > 0.0 {
             any = true;
             let window = get_primary_window_size(&windows);
-            let delta_x = {
-                let delta = rotation_move.x / window.x * std::f32::consts::PI * 2.0;
-                if pan_orbit.upside_down { -delta } else { delta }
-            };
+            let delta_x = rotation_move.x / window.x * std::f32::consts::PI * 2.0;
             let delta_y = rotation_move.y / window.y * std::f32::consts::PI;
             let yaw = Quat::from_rotation_y(-delta_x);
             let pitch = Quat::from_rotation_x(-delta_y);
@@ -88,9 +72,9 @@ fn orbit_camera(
             let below_board = (transform.rotation * Vec3::Z).y < 0.0;
             if below_board {tilt = 2. - tilt;}
             let mut adjustment = 0.0;
-            if (tilt < MIN_PITCH) {
+            if tilt < MIN_PITCH {
                 adjustment = MIN_PITCH - tilt;
-            } else if (tilt > MAX_PITCH) {
+            } else if tilt > MAX_PITCH {
                 adjustment = MAX_PITCH - tilt;
             } //TODO: max down tilt is a little buggy
             let adjustment = Quat::from_rotation_x(adjustment);
