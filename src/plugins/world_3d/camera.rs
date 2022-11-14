@@ -35,7 +35,7 @@ impl Default for PanOrbitCamera {
 
 /// Spawn a camera like this
 fn spawn_camera(mut commands: Commands) {
-    let translation = Vec3::new(-2.0, 2.5, 5.0);
+    let translation = Vec3::new(0., 20., 10.0);
     let radius = translation.length();
 
     commands
@@ -74,7 +74,9 @@ fn pan_camera(
 
         velocity = velocity.normalize_or_zero();
 
-        let change = velocity * time.delta_seconds() * CAMERA_SPEED;
+        let mut change = velocity * time.delta_seconds() * CAMERA_SPEED;
+        // scale velocity with zoom radius
+        change *= camera.radius + CAMERA_SPEED_OFFSET;
 
         transform.translation += change;
         camera.focus += change;
@@ -134,7 +136,8 @@ fn orbit_camera(
             any = true;
             pan_orbit.radius -= scroll * pan_orbit.radius * 0.2;
             // dont allow zoom to reach zero or you get stuck
-            pan_orbit.radius = f32::max(pan_orbit.radius, 0.05);
+            pan_orbit.radius = f32::max(pan_orbit.radius, MAX_ZOOM_IN);
+            pan_orbit.radius = f32::min(pan_orbit.radius, MAX_ZOOM_OUT);
         }
 
         if any {
