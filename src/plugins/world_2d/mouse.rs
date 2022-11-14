@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy::render::camera::RenderTarget;
 
-use crate::utils::WorldCoord;
+use crate::plugins::world_2d::WorldCoord;
 
 pub struct MousePlugin;
 

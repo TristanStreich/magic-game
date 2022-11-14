@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::{RegisterInspectable, WorldInspectorPlugin};
 
-use crate::utils::hex::{HexTile, HexCoord};
+use crate::plugins::world_2d::hex::{HexTile, HexCoord};
 
 pub struct DebugPlugin;
 
