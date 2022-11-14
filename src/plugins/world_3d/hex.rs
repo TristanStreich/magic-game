@@ -4,6 +4,7 @@ use std::cmp::{max,min};
 // Bevy Imports
 use bevy::prelude::*;
 use bevy_inspector_egui::Inspectable;
+use bevy_mod_picking::PickableBundle;
 
 use crate::plugins::world_3d::config::{HEX_CIRCUMRADIUS, HEX_GRID_RADIUS};
 
@@ -87,20 +88,15 @@ impl HexTile {
         let position = hex_coord.to_world();
         commands
             .spawn_bundle(PbrBundle {
+                mesh: mesh.clone(),
+                material: material.clone(),
                 transform: Transform::from_translation(position),
                 ..Default::default()
-            })
-            // Add children to the parent
-            .with_children(|parent| {
-                parent.spawn_bundle(PbrBundle {
-                    mesh: mesh.clone(),
-                    material: material.clone(),
-                    ..Default::default()
-                });
             })
             .insert(Name::new("HexTile"))
             .insert(HexTile)
             .insert(hex_coord)
+            .insert_bundle(PickableBundle::default())
             .id()
     }
 }
