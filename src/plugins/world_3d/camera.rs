@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy::input::mouse::{MouseMotion, MouseWheel};
+use bevy_inspector_egui::Inspectable;
 
 use crate::plugins::world_3d::config::*;
 
@@ -15,7 +16,7 @@ impl Plugin for CameraPlugin {
 
 
 /// Tags an entity as capable of panning and orbiting.
-#[derive(Component)]
+#[derive(Component, Inspectable)]
 struct PanOrbitCamera {
     /// The "focus point" to orbit around. It is automatically updated when panning the camera
     pub focus: Vec3,
@@ -30,6 +31,53 @@ impl Default for PanOrbitCamera {
         }
     }
 }
+
+/// Spawn a camera like this
+fn spawn_camera(mut commands: Commands) {
+    let translation = Vec3::new(-2.0, 2.5, 5.0);
+    let radius = translation.length();
+
+    commands.spawn_bundle(Camera3dBundle {
+        transform: Transform::from_translation(translation)
+            .looking_at(Vec3::ZERO, Vec3::Y),
+        ..Default::default()
+    }).insert(PanOrbitCamera {
+        radius,
+        ..Default::default()
+    }).insert(Name::new("Game Camera"));
+}
+
+// Camera Pan using WASD
+fn pan_camera(
+    keys: Res<Input<KeyCode>>,
+    time: Res<Time>,
+    mut query: Query<(&mut Transform, &mut PanOrbitCamera)>,
+) {
+    for (mut transform, mut camera) in query.iter_mut() {
+        let mut velocity = Vec3::ZERO;
+        let local_z = transform.local_z();
+        let forward = -Vec3::new(local_z.x, 0., local_z.z);
+        let right = Vec3::new(local_z.z, 0., -local_z.x);
+
+        for key in keys.get_pressed() {
+            match key {
+                KeyCode::W => velocity += forward,
+                KeyCode::S => velocity -= forward,
+                KeyCode::A => velocity -= right,
+                KeyCode::D => velocity += right,
+                _ => (),
+            }
+        }
+
+        velocity = velocity.normalize_or_zero();
+
+        let change = velocity * time.delta_seconds() * CAMERA_SPEED;
+
+        transform.translation += change;
+        camera.focus += change;
+    }
+}
+
 
 /// Pan the camera with middle mouse click, zoom with scroll wheel, orbit with right mouse click.
 fn orbit_camera(
@@ -100,50 +148,4 @@ fn get_primary_window_size(windows: &Res<Windows>) -> Vec2 {
     let window = windows.get_primary().unwrap();
     let window = Vec2::new(window.width() as f32, window.height() as f32);
     window
-}
-
-/// Spawn a camera like this
-fn spawn_camera(mut commands: Commands) {
-    let translation = Vec3::new(-2.0, 2.5, 5.0);
-    let radius = translation.length();
-
-    commands.spawn_bundle(Camera3dBundle {
-        transform: Transform::from_translation(translation)
-            .looking_at(Vec3::ZERO, Vec3::Y),
-        ..Default::default()
-    }).insert(PanOrbitCamera {
-        radius,
-        ..Default::default()
-    });
-}
-
-// Camera Pan using WASD
-fn pan_camera(
-    keys: Res<Input<KeyCode>>,
-    time: Res<Time>,
-    mut query: Query<(&mut Transform, &mut PanOrbitCamera)>,
-) {
-    for (mut transform, mut camera) in query.iter_mut() {
-        let mut velocity = Vec3::ZERO;
-        let local_z = transform.local_z();
-        let forward = -Vec3::new(local_z.x, 0., local_z.z);
-        let right = Vec3::new(local_z.z, 0., -local_z.x);
-
-        for key in keys.get_pressed() {
-            match key {
-                KeyCode::W => velocity += forward,
-                KeyCode::S => velocity -= forward,
-                KeyCode::A => velocity -= right,
-                KeyCode::D => velocity += right,
-                _ => (),
-            }
-        }
-
-        velocity = velocity.normalize_or_zero();
-
-        let change = velocity * time.delta_seconds() * CAMERA_SPEED;
-
-        transform.translation += change;
-        camera.focus += change;
-    }
 }
