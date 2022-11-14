@@ -1,3 +1,4 @@
+pub mod config;
 pub mod camera;
 pub mod debug;
 pub mod hex;

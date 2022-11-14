@@ -5,12 +5,7 @@ use std::cmp::{max,min};
 use bevy::prelude::*;
 use bevy_inspector_egui::Inspectable;
 
-pub const HEX_INNER_RADIUS: f32 = 1.0; // 40
-pub const HEX_CIRCUMRADIUS: f32 = HEX_INNER_RADIUS * 1.154700538; //sqrt(4/3)
-pub const HEX_SMALL_DIAMETER: f32 = 2.0 * HEX_INNER_RADIUS;
-pub const HEX_LARGE_DIAMETER: f32 = 2.0 * HEX_CIRCUMRADIUS;
-pub const HEX_GRID_RADIUS: i32 = 5;
-pub const HEX_SPRITE_SCALE: f32 = HEX_SMALL_DIAMETER * 0.00275;
+use crate::plugins::world_3d::config::{HEX_CIRCUMRADIUS, HEX_GRID_RADIUS};
 
 pub struct HexPlugin;
 

@@ -1,3 +1,4 @@
+pub mod config;
 pub mod debug;
 pub mod flying_camera;
 pub mod hex;
