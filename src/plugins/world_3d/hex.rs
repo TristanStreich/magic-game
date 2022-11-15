@@ -67,7 +67,7 @@ pub struct HexGrid;
             tiles.push(tile);
         }
         commands
-        .spawn_bundle(SpatialBundle{..default()})
+        .spawn(SpatialBundle{..default()})
         .insert(Name::new("HexGrid"))
         .insert(HexGrid)
         .push_children(&tiles);
@@ -87,7 +87,7 @@ impl HexTile {
     ) -> Entity {
         let position = hex_coord.to_world();
         commands
-            .spawn_bundle(PbrBundle {
+            .spawn(PbrBundle {
                 mesh: mesh.clone(),
                 material: material.clone(),
                 transform: Transform::from_translation(position),
@@ -96,7 +96,7 @@ impl HexTile {
             .insert(Name::new("HexTile"))
             .insert(HexTile)
             .insert(hex_coord)
-            .insert_bundle(PickableBundle::default())
+            .insert(PickableBundle::default())
             .id()
     }
 }

@@ -8,10 +8,10 @@ use bevy::app::{PluginGroup, PluginGroupBuilder};
 pub struct World3dPlugins;
 
 impl PluginGroup for World3dPlugins {
-    fn build(&mut self, group: &mut PluginGroupBuilder) {
-        group
+    fn build(self) -> PluginGroupBuilder {
+        PluginGroupBuilder::start::<Self>()
         .add(camera::CameraPlugin)
         .add(hex::HexPlugin)
-        .add(debug::DebugPlugin);
+        .add(debug::DebugPlugin)
     }
 }
