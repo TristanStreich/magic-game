@@ -39,7 +39,7 @@ fn spawn_camera(mut commands: Commands) {
     let radius = translation.length();
 
     commands
-    .spawn_bundle(Camera3dBundle {
+    .spawn(Camera3dBundle {
         transform: Transform::from_translation(translation)
             .looking_at(Vec3::ZERO, Vec3::Y),
         ..Default::default()})
@@ -47,7 +47,7 @@ fn spawn_camera(mut commands: Commands) {
         radius,
         ..Default::default()})
     .insert(Name::new("Game Camera"))
-    .insert_bundle(PickingCameraBundle::default());
+    .insert(PickingCameraBundle::default());
 }
 
 // Camera Pan using WASD

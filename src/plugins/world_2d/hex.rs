@@ -88,7 +88,7 @@ pub struct HexGrid;
             tiles.push(tile);
         }
         commands
-        .spawn_bundle(SpatialBundle{..default()})
+        .spawn(SpatialBundle{..default()})
         .insert(Name::new("HexGrid"))
         .insert(HexGrid)
         .push_children(&tiles);
@@ -106,7 +106,7 @@ impl HexTile {
         assets: &Res<AssetServer>
     ) -> Entity {
         let (x, y) = hex_coord.to_world();
-        commands.spawn_bundle(SpriteBundle {
+        commands.spawn(SpriteBundle {
             texture: assets.load("hex.png"),
             transform: Transform::from_xyz(x, y, 0.0)
                         .with_scale(Vec3::new(HEX_SPRITE_SCALE, HEX_SPRITE_SCALE, 1.0)),
@@ -119,6 +119,7 @@ impl HexTile {
     }
 }
 
+#[derive(Resource)]
 pub struct Highlighted(Option<HexCoord>);
 
 fn init_highlighted(
@@ -129,7 +130,7 @@ fn init_highlighted(
     commands.insert_resource(Highlighted(None));
     
     let (x, y) = HexCoord(0,0).to_world();
-    let highlighted_hex = commands.spawn_bundle(SpriteBundle {
+    let highlighted_hex = commands.spawn(SpriteBundle {
         texture: assets.load("hex_highlighted.png"),
         transform: Transform::from_xyz(x, y, -1.0)
                     .with_scale(Vec3::new(HEX_SPRITE_SCALE, HEX_SPRITE_SCALE, 1.0)),

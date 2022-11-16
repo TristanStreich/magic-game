@@ -13,6 +13,7 @@ impl Plugin for MousePlugin {
     }
 }
 
+#[derive(Resource)]
 pub struct MousePos(WorldCoord);
 
 impl MousePos {
