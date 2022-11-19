@@ -123,6 +123,7 @@ fn cycle_cubemap_asset(
     for _ in 0..CUBEMAPS.len() {
         new_index = (new_index + 1) % CUBEMAPS.len();
         if supported_compressed_formats.contains(CUBEMAPS[new_index].1) {
+            println!("Swapping Cube Map!");
             break;
         }
         info!("Skipping unsupported format: {:?}", CUBEMAPS[new_index]);

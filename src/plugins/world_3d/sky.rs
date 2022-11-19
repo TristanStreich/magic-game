@@ -15,34 +15,22 @@ impl Plugin for SkyPlugin {
 fn spawn_sun(
     mut commands: Commands
 ) {
-    let main_light = commands
+    commands
     .spawn(DirectionalLightBundle{
         directional_light: DirectionalLight {
-            illuminance: SUN_MAIN_INTENSITY,
+            illuminance: SUN_INTENSITY,
             shadows_enabled: true,
             ..default()
         },
-        transform: Transform::from_rotation(quat_from_xyz(SUN_MAIN_ROTATION)),
+        transform: Transform::from_rotation(quat_from_xyz(SUN_ROTATION)),
         ..default()
     })
-    .insert(Name::new("Main Light"))
-    .id();
-
-    let diffuse_light = commands
-    .spawn(DirectionalLightBundle{
-        directional_light: DirectionalLight {
-            illuminance: SUN_DIFFUSE_INTENSITY,
-            ..default()
-        },
-        transform: Transform::from_rotation(quat_from_xyz(SUN_DIFFUSE_ROTATION)),
+    .insert(Name::new("Sun"));
+    
+    commands.insert_resource(AmbientLight {
+        brightness: SUN_AMBIENT_LIGHT,
         ..default()
-    })
-    .insert(Name::new("Diffuse Light"))
-    .id();
-
-    commands.spawn(SpatialBundle::default())
-    .insert(Name::new("Sun"))
-    .push_children(&[main_light, diffuse_light]);
+        });
 }
 
 
