@@ -107,7 +107,7 @@ impl HexTile {
     ) -> Entity {
         let (x, y) = hex_coord.to_world();
         commands.spawn(SpriteBundle {
-            texture: assets.load("hex.png"),
+            texture: assets.load("textures/sprites/hex.png"),
             transform: Transform::from_xyz(x, y, 0.0)
                         .with_scale(Vec3::new(HEX_SPRITE_SCALE, HEX_SPRITE_SCALE, 1.0)),
             ..default()
@@ -131,7 +131,7 @@ fn init_highlighted(
     
     let (x, y) = HexCoord(0,0).to_world();
     let highlighted_hex = commands.spawn(SpriteBundle {
-        texture: assets.load("hex_highlighted.png"),
+        texture: assets.load("textures/sprites/hex_highlighted.png"),
         transform: Transform::from_xyz(x, y, -1.0)
                     .with_scale(Vec3::new(HEX_SPRITE_SCALE, HEX_SPRITE_SCALE, 1.0)),
         ..default()

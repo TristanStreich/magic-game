@@ -1,4 +1,3 @@
-
 use bevy::{
     asset::LoadState,
     pbr::{MaterialPipeline, MaterialPipelineKey},
@@ -44,7 +43,11 @@ fn spawn_sun(
             shadows_enabled: true,
             ..default()
         },
-        transform: Transform::from_rotation(quat_from_xyz(SUN_ROTATION)),
+        transform: Transform::from_rotation(Quat::from_euler(
+            EulerRot::XYZ,
+            SUN_ROTATION.0,
+            SUN_ROTATION.1,
+            SUN_ROTATION.2)),
         ..default()
     })
     .insert(Name::new("Sun"));
@@ -54,17 +57,6 @@ fn spawn_sun(
         ..default()
         });
 }
-
-
-fn quat_from_xyz(rotation: (f32, f32, f32)) -> Quat {
-    Quat::from_euler(
-        EulerRot::XYZ,
-        rotation.0,
-        rotation.1,
-        rotation.2)
-}
-
-
 
 
 #[derive(Resource)]
@@ -77,7 +69,7 @@ fn init_cube_map(
     mut commands: Commands,
     asset_server: Res<AssetServer>
 ) {
-    let skybox_handle = asset_server.load("sky_box/Ryfjallet_cubemap.png");
+    let skybox_handle = asset_server.load("textures/sky_boxes/Ryfjallet_cubemap.png");
     
     commands.insert_resource(Cubemap {
         is_loaded: false,
@@ -130,7 +122,7 @@ struct CubemapMaterial {
 
 impl Material for CubemapMaterial {
     fn fragment_shader() -> ShaderRef {
-        "sky_box/cubemap_unlit.wgsl".into()
+        "shaders/cubemap_unlit.wgsl".into()
     }
 
     fn specialize(

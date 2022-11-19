@@ -59,7 +59,7 @@ pub struct HexGrid;
         mut materials: ResMut<Assets<StandardMaterial>>,
     ) {
         let tile_material = materials.add(Color::rgb(1., 0.8, 0.8).into());
-        let hex_tile_mesh: Handle<Mesh> = assets.load("hex.glb#Mesh0/Primitive0");
+        let hex_tile_mesh: Handle<Mesh> = assets.load("meshes/hex.glb#Mesh0/Primitive0");
 
         let mut tiles = Vec::new();
         for hex_coord in HexCoord(0,0).within_radius(HEX_GRID_RADIUS).into_iter() {
