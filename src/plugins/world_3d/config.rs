@@ -4,6 +4,7 @@ pub const HEX_CIRCUMRADIUS: f32 = HEX_INNER_RADIUS * 1.154700538; //sqrt(4/3)
 pub const HEX_SMALL_DIAMETER: f32 = 2.0 * HEX_INNER_RADIUS;
 pub const HEX_LARGE_DIAMETER: f32 = 2.0 * HEX_CIRCUMRADIUS;
 pub const HEX_GRID_RADIUS: i32 = 50;
+pub const HEX_HEIGHT_SCALE: f32 = 0.2;
 
 
 // Camera

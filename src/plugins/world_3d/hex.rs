@@ -1,12 +1,13 @@
 // Standard Lib Imports
 use std::cmp::{max,min};
+use rand::Rng;
 
 // Bevy Imports
 use bevy::prelude::*;
 use bevy_inspector_egui::Inspectable;
 use bevy_mod_picking::PickableBundle;
 
-use crate::plugins::world_3d::config::{HEX_CIRCUMRADIUS, HEX_GRID_RADIUS};
+use crate::plugins::world_3d::config::{HEX_CIRCUMRADIUS, HEX_GRID_RADIUS, HEX_HEIGHT_SCALE};
 
 pub struct HexPlugin;
 
@@ -58,12 +59,14 @@ pub struct HexGrid;
         assets: Res<AssetServer>,
         mut materials: ResMut<Assets<StandardMaterial>>,
     ) {
+        let mut rng = rand::thread_rng();
+
         let tile_material = materials.add(Color::rgb(1., 0.8, 0.8).into());
         let hex_tile_mesh: Handle<Mesh> = assets.load("meshes/hex.glb#Mesh0/Primitive0");
 
         let mut tiles = Vec::new();
         for hex_coord in HexCoord(0,0).within_radius(HEX_GRID_RADIUS).into_iter() {
-            let tile = HexTile::spawn_at(hex_coord, &mut commands, &hex_tile_mesh, &tile_material);
+            let tile = HexTile::spawn(hex_coord,rng.gen_range(1..10), &mut commands, &hex_tile_mesh, &tile_material);
             tiles.push(tile);
         }
         commands
@@ -79,18 +82,27 @@ pub struct HexGrid;
 pub struct HexTile;
 
 impl HexTile {
-    fn spawn_at(
+    fn spawn(
         hex_coord: HexCoord,
+        height: u32,
         commands: &mut Commands,
         mesh: &Handle<Mesh>,
         material: &Handle<StandardMaterial>
     ) -> Entity {
-        let position = hex_coord.to_world();
+        let height = (height as f32) * HEX_HEIGHT_SCALE;
+        let mut position = hex_coord.to_world();
+        position.y = height / 2.;
+        let scale = Vec3::new(1.,height,1.);
         commands
             .spawn(PbrBundle {
                 mesh: mesh.clone(),
                 material: material.clone(),
-                transform: Transform::from_translation(position),
+                transform: Transform {
+                    translation: position,
+                    scale,
+                    ..default()
+                }
+                ,
                 ..Default::default()
             })
             .insert(Name::new("HexTile"))
