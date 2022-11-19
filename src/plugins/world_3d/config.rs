@@ -16,6 +16,7 @@ pub const MAX_ZOOM_OUT: f32 = 50.;
 
 
 // Sun
-pub const SUN_INTENSITY: f32 = 10_000_000.;
-pub const SUN_RANGE: f32 = 10_000.;
-pub const SUN_HEIGHT: f32 = 1_000.0;
+pub const SUN_MAIN_INTENSITY: f32 = 50_000.;
+pub const SUN_MAIN_ROTATION: (f32, f32, f32) = (11.4,0.3,0.);
+pub const SUN_DIFFUSE_INTENSITY: f32 = 10_000.;
+pub const SUN_DIFFUSE_ROTATION: (f32, f32, f32) = (10.,-0.6,0.);

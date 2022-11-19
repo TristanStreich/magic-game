@@ -15,4 +15,3 @@ opt-level = 3
 bevy = "0.9"
 bevy-inspector-egui = "0.14.0"
 bevy_mod_picking = "0.10.0"
-bevy_skybox = "0.5.0"
