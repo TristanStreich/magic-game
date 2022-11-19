@@ -56,7 +56,7 @@ fn setup(
         ..default()
     });
 
-    let skybox_handle = asset_server.load("sky_box/Ryfjallet_cubemap.png");
+    let skybox_handle = asset_server.load("textures/sky_boxes/Ryfjallet_cubemap.png");
     // camera
     commands.spawn((
         Camera3dBundle {
@@ -125,7 +125,7 @@ struct CubemapMaterial {
 
 impl Material for CubemapMaterial {
     fn fragment_shader() -> ShaderRef {
-        "sky_box/cubemap_unlit.wgsl".into()
+        "shaders/cubemap_unlit.wgsl".into()
     }
 
     fn specialize(

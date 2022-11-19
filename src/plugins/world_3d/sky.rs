@@ -25,11 +25,9 @@ pub struct SkyPlugin;
 impl Plugin for SkyPlugin {
     fn build(&self, app: &mut App) {
         app
-        .add_plugin(MaterialPlugin::<CubemapMaterial>::default())
+        // .add_plugin(SkyBoxPlugin)
         .insert_resource(ClearColor(Color::rgb(0.5294, 0.8087, 0.9216)))
-        .add_startup_system(spawn_sun)
-        .add_startup_system(init_cube_map)
-        .add_system(asset_loaded);
+        .add_startup_system(spawn_sun);
     }
 }
 
@@ -56,6 +54,22 @@ fn spawn_sun(
         brightness: SUN_AMBIENT_LIGHT,
         ..default()
         });
+}
+
+
+
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Sky box stuff ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+struct SkyBoxPlugin;
+
+impl Plugin for SkyBoxPlugin {
+    fn build(&self, app: &mut App) {
+        app
+        .add_plugin(MaterialPlugin::<CubemapMaterial>::default())
+        .add_startup_system(init_cube_map)
+        .add_system(asset_loaded);
+    }
 }
 
 
