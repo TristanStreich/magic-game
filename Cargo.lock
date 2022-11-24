@@ -2083,6 +2083,7 @@ dependencies = [
  "bevy-inspector-egui",
  "bevy_mod_picking",
  "rand",
+ "xxhash-rust",
 ]
 
 [[package]]
@@ -3792,3 +3793,9 @@ name = "xi-unicode"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a67300977d3dc3f8034dae89778f502b6ba20b269527b3223ba59c0cf393bb8a"
+
+[[package]]
+name = "xxhash-rust"
+version = "0.8.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "735a71d46c4d68d71d4b24d03fdc2b98e38cea81730595801db779c04fe80d70"

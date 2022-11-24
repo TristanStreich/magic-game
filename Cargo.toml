@@ -15,4 +15,5 @@ opt-level = 3
 bevy = "0.9"
 bevy-inspector-egui = "0.14.0"
 bevy_mod_picking = "0.10.0"
+xxhash-rust = { version = "0.8.6", features=["xxh3"]}
 rand = "0.8.5"
