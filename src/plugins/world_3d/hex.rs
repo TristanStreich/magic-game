@@ -9,14 +9,17 @@ use bevy_inspector_egui::Inspectable;
 use bevy_mod_picking::PickableBundle;
 
 use crate::plugins::world_3d::config::{HEX_CIRCUMRADIUS, HEX_GRID_RADIUS};
-use height_map::HeightMap;
+use height_map::{HeightMap, PerlinStep};
 
 pub struct HexPlugin;
 
 impl Plugin for HexPlugin {
     fn build(&self, app: &mut App) {
         app
-        .insert_resource(HeightMap::new_rand(1, 10, Some(42)))
+        // .insert_resource(HeightMap::new_rand(1, 10, Some(42)))
+        .insert_resource(HeightMap::new_perlin(vec![
+            PerlinStep::new(0.1, 0.05, 20.)
+        ], Some(42)))
         .add_startup_system(HexGrid::spawn);
     }
 }
