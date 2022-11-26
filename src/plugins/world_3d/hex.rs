@@ -9,17 +9,23 @@ use bevy_inspector_egui::Inspectable;
 use bevy_mod_picking::PickableBundle;
 
 use crate::plugins::world_3d::config::{HEX_CIRCUMRADIUS, HEX_GRID_RADIUS};
-use height_map::{HeightMap, PerlinStep};
+use height_map::{HeightMap, PerlinGenerator, PerlinStep, RandGenerator, FlatGenerator};
 
 pub struct HexPlugin;
 
 impl Plugin for HexPlugin {
     fn build(&self, app: &mut App) {
         app
-        // .insert_resource(HeightMap::new_rand(1, 10, Some(42)))
-        .insert_resource(HeightMap::new_perlin(vec![
-            PerlinStep::new(0.1, 0.05, 20.)
-        ], Some(42)))
+        // .insert_resource(HeightMap::new(FlatGenerator::new(1)))
+        // .insert_resource(HeightMap::new(RandGenerator::new(1, 10, None)))
+        // .insert_resource(HeightMap::new(PerlinGenerator::dunes(None)))
+        // .insert_resource(HeightMap::new(PerlinGenerator::hills(None)))
+        // .insert_resource(HeightMap::new(PerlinGenerator::slopes(None)))
+        // .insert_resource(HeightMap::new(PerlinGenerator::crags(None)))
+        .insert_resource(HeightMap::new(PerlinGenerator::lowlands(None)))
+        // .insert_resource(HeightMap::new(PerlinGenerator::new(vec![
+        //     PerlinStep::new(0.05, 0.035, 3.)
+        // ], None)))
         .add_startup_system(HexGrid::spawn);
     }
 }
@@ -75,8 +81,11 @@ pub struct HexGrid;
         let hex_tile_mesh: Handle<Mesh> = assets.load("meshes/hex.glb#Mesh0/Primitive0");
 
         let mut tiles = Vec::new();
+        let mut heights = Vec::new();
         for hex_coord in HexCoord(0,0).within_radius(HEX_GRID_RADIUS).into_iter() {
-            let tile = HexTile::spawn(hex_coord,height_map.get_height(hex_coord), &mut commands, &hex_tile_mesh, &tile_material);
+            let height = height_map.get_height(hex_coord);
+            heights.push(height);
+            let tile = HexTile::spawn(hex_coord, height, &mut commands, &hex_tile_mesh, &tile_material);
             tiles.push(tile);
         }
         commands
