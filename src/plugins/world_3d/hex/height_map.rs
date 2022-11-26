@@ -130,6 +130,7 @@ impl PerlinGenerator {
     }
 
     // ~~~~~~~~~~~ Internal Funcs ~~~~~~~~~~~ //
+    // These were created by following https://gpfault.net/posts/perlin-noise.txt.html
 
     fn gradient(&self, vec: Vec2) -> Vec2 {
         let x_dir = seeded_hash(vec.to_string().as_bytes(), self.seed, "Perlin X Dir") as f32;

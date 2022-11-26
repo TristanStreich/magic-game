@@ -81,10 +81,8 @@ pub struct HexGrid;
         let hex_tile_mesh: Handle<Mesh> = assets.load("meshes/hex.glb#Mesh0/Primitive0");
 
         let mut tiles = Vec::new();
-        let mut heights = Vec::new();
         for hex_coord in HexCoord(0,0).within_radius(HEX_GRID_RADIUS).into_iter() {
             let height = height_map.get_height(hex_coord);
-            heights.push(height);
             let tile = HexTile::spawn(hex_coord, height, &mut commands, &hex_tile_mesh, &tile_material);
             tiles.push(tile);
         }
