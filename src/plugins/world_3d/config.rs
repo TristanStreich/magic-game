@@ -3,8 +3,8 @@ pub const HEX_INNER_RADIUS: f32 = 0.88;
 pub const HEX_CIRCUMRADIUS: f32 = HEX_INNER_RADIUS * 1.154700538; //sqrt(4/3)
 pub const HEX_SMALL_DIAMETER: f32 = 2.0 * HEX_INNER_RADIUS;
 pub const HEX_LARGE_DIAMETER: f32 = 2.0 * HEX_CIRCUMRADIUS;
-pub const HEX_GRID_RADIUS: i32 = 50;
-pub const HEX_HEIGHT_SCALE: f32 = 0.2;
+pub const HEX_GRID_RADIUS: i32 = 20;
+pub const HEX_HEIGHT_SCALE: f32 = 0.4;
 
 
 // Camera
@@ -20,3 +20,6 @@ pub const MAX_ZOOM_OUT: f32 = 50.;
 pub const SUN_INTENSITY: f32 = 50_000.;
 pub const SUN_ROTATION: (f32, f32, f32) = (11.4,0.3,0.);
 pub const SUN_AMBIENT_LIGHT: f32 = 1.;
+
+// Player
+pub const PLAYER_SCALE: f32 = 0.25;

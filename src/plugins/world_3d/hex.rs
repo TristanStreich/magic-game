@@ -16,18 +16,26 @@ pub struct HexPlugin;
 impl Plugin for HexPlugin {
     fn build(&self, app: &mut App) {
         app
-        // .insert_resource(HeightMap::new(FlatGenerator::new(1)))
-        // .insert_resource(HeightMap::new(RandGenerator::new(1, 10, None)))
-        // .insert_resource(HeightMap::new(PerlinGenerator::dunes(None)))
-        // .insert_resource(HeightMap::new(PerlinGenerator::hills(None)))
-        // .insert_resource(HeightMap::new(PerlinGenerator::slopes(None)))
-        // .insert_resource(HeightMap::new(PerlinGenerator::crags(None)))
-        .insert_resource(HeightMap::new(PerlinGenerator::lowlands(None)))
-        // .insert_resource(HeightMap::new(PerlinGenerator::new(vec![
-        //     PerlinStep::new(0.05, 0.035, 3.)
-        // ], None)))
+        .add_startup_system_to_stage(StartupStage::PreStartup, init_height_map)
         .add_startup_system(HexGrid::spawn);
     }
+}
+
+fn init_height_map(
+    mut commands: Commands,
+) {
+    commands
+    // .insert_resource(HeightMap::new(FlatGenerator::new(1)))
+    // .insert_resource(HeightMap::new(RandGenerator::new(1, 10, None)))
+    // .insert_resource(HeightMap::new(PerlinGenerator::dunes(None)))
+    // .insert_resource(HeightMap::new(PerlinGenerator::hills(None)))
+    // .insert_resource(HeightMap::new(PerlinGenerator::slopes(None)))
+    // .insert_resource(HeightMap::new(PerlinGenerator::crags(None)))
+    .insert_resource(HeightMap::new(PerlinGenerator::lowlands(None)))
+    // .insert_resource(HeightMap::new(PerlinGenerator::new(vec![
+    //     PerlinStep::new(0.05, 0.035, 3.)
+    // ], None)))
+    ;
 }
 
 #[derive(Component, Inspectable, Debug, Copy, Clone)]

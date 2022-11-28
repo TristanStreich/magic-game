@@ -1,7 +1,8 @@
+pub mod camera;
 pub mod config;
 pub mod debug;
-pub mod camera;
 pub mod hex;
+pub mod player;
 pub mod sky;
 
 use bevy::app::{PluginGroup, PluginGroupBuilder};
@@ -15,5 +16,6 @@ impl PluginGroup for World3dPlugins {
         .add(hex::HexPlugin)
         .add(debug::DebugPlugin)
         .add(sky::SkyPlugin)
+        .add(player::PlayerPlugin)
     }
 }
