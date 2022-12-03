@@ -29,9 +29,9 @@ fn init_height_map(
     // .insert_resource(HeightMap::new(RandGenerator::new(1, 10, None)))
     // .insert_resource(HeightMap::new(PerlinGenerator::dunes(None)))
     // .insert_resource(HeightMap::new(PerlinGenerator::hills(None)))
-    .insert_resource(HeightMap::new(PerlinGenerator::slopes(None)))
+    // .insert_resource(HeightMap::new(PerlinGenerator::slopes(None)))
     // .insert_resource(HeightMap::new(PerlinGenerator::crags(None)))
-    // .insert_resource(HeightMap::new(PerlinGenerator::lowlands(None)))
+    .insert_resource(HeightMap::new(PerlinGenerator::lowlands(None)))
     // .insert_resource(HeightMap::new(PerlinGenerator::new(vec![
     //     PerlinStep::new(0.05, 0.035, 3.)
     // ], None)))

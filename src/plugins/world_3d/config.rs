@@ -23,3 +23,4 @@ pub const SUN_AMBIENT_LIGHT: f32 = 1.;
 
 // Player
 pub const PLAYER_SCALE: f32 = 0.25;
+pub const PLAYER_SPEED: f32 = 0.005;
