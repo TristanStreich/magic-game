@@ -18,7 +18,8 @@ impl Plugin for HexPlugin {
         app
         .add_startup_system_to_stage(StartupStage::PreStartup, init_height_map)
         .add_startup_system(HexGrid::spawn)
-        .add_system(line_drawer);
+        // .add_system(line_drawer)
+        ;
     }
 }
 

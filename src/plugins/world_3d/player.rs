@@ -10,11 +10,14 @@ use bevy_mod_picking::{
 use crate::plugins::world_3d::{
     animate::{
         Animation,
-        LinearMovement
+        LinearMovement,
+        AnimationSeries,
+        now,
     },
     config::{
         PLAYER_SCALE,
-        PLAYER_SPEED
+        PLAYER_SPEED,
+        HEX_SMALL_DIAMETER,
     },
     hex::{
         HexCoord,
@@ -71,17 +74,27 @@ fn player_mover(
         if let Some(player_e) = player_to_move {
             let player = player_query.get(player_e);
             if let Ok((entity, transform)) = player {
-                let height = height_map.get_height(tile_coord);
-                let start_pos = transform.translation;
-                let end_pos = player_position(tile_coord, height);
-                let animation = Animation::new(
-                    LinearMovement::new(start_pos, end_pos, PLAYER_SPEED)
-                );
+                let animation = gen_player_movement_animation(transform.translation, tile_coord, &height_map);
                 commands.entity(entity).insert(animation);
                 // transform.translation = player_position(tile_coord, height);
             }
         }
     }
+}
+
+fn gen_player_movement_animation(start: Vec3, end: HexCoord, map: &HeightMap) -> Animation {
+    let move_duration = (HEX_SMALL_DIAMETER / PLAYER_SPEED) as f64;
+    let line = player_pos_to_hex(start).line_between(end);
+    let mut animations = AnimationSeries::new();
+    for (i, this_coord) in line.iter().enumerate() {
+        let this_pos = player_position(*this_coord, map.get_height(*this_coord));
+        if let Some(next_coord) = line.get(i + 1) {
+            let next_pos = player_position(*next_coord, map.get_height(*next_coord));
+            let animation = LinearMovement::new(this_pos, next_pos, PLAYER_SPEED, now() + move_duration * i as f64);
+            animations.push(animation)
+        }
+    }
+    Animation::new(animations)
 }
 
 #[derive(Component, Inspectable)]
@@ -123,4 +136,13 @@ pub fn player_position(coord: HexCoord, height: u32) -> Vec3 {
     position.x -= PLAYER_SCALE;
     position.z -= 10. * PLAYER_SCALE;
     position
+}
+
+// FIXME: this function and player_position. Need to go. This is horrible.
+// We need to make it so the mesh is attached to the transform properly on init
+pub fn player_pos_to_hex(mut player_pos: Vec3) -> HexCoord {
+    player_pos.z += 10. * PLAYER_SCALE;
+    player_pos.x -= PLAYER_SCALE;
+
+    HexCoord::from_world(player_pos)
 }

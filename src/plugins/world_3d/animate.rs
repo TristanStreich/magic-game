@@ -1,7 +1,10 @@
 use bevy::prelude::*;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use crate::plugins::world_2d::hex::HexCoord;
+use crate::plugins::world_3d::hex::{
+    HexCoord,
+    height_map::HeightMap
+};
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ System ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
@@ -67,12 +70,11 @@ pub struct LinearMovement {
 }
 
 impl LinearMovement {
-    pub fn new(start_pos: Vec3, end_pos: Vec3, speed: f32) -> Self {
+    pub fn new(start_pos: Vec3, end_pos: Vec3, speed: f32, start_time: f64) -> Self {
         let path = end_pos - start_pos;
         let dir = path.normalize();
         let velocity = dir * speed;
         let duration = (path.length() / speed) as f64;
-        let start_time = now();
         let end_time = duration + start_time;
         LinearMovement {
             start_time,
@@ -104,8 +106,12 @@ pub struct AnimationSeries {
 }
 
 impl AnimationSeries {
-    pub fn new(animators: Vec<Box<dyn Animator>>) -> Self {
-        Self { animators }
+    pub fn new() -> Self {
+        Self { animators: Vec::new() }
+    }
+
+    pub fn push(&mut self, animator: impl Animator) {
+        self.animators.push(Box::new(animator))
     }
 }
 
@@ -116,7 +122,7 @@ impl Animator for AnimationSeries {
             if animator.is_finished(time) {
                 continue
             } else {
-            // if not finished, animate and return
+                // if not finished, animate and return
                 animator.update(transform, time);
                 return
             }
@@ -137,30 +143,38 @@ impl Animator for AnimationSeries {
 }
 
 
-// TODO: probably rename.
-pub struct HexPathing {
-    animations: AnimationSeries
-}
+// // TODO: probably rename.
+// pub struct HexPathing {
+//     animations: AnimationSeries
+// }
 
-impl HexPathing {
-    pub fn new(start: HexCoord, end: HexCoord, speed: f32) {
+// impl HexPathing {
+//     pub fn new(start: HexCoord, end: HexCoord, speed: f32, height_map: HeightMap) -> HexPathing {
+//         let line = start.line_between(end);
+//         let mut animations: Vec<Box<dyn Animator>> = vec![];
+//         for (i, coord) in line.iter().enumerate() {
+//             if let Some(next) = line.get(i) {
+//                 let animation = LinearMovement::new(coord.to_world(), next.to_world(), speed);
+//                 animations.push(Box::new(animation))
+//             }
+//         }
+//         Self {animations: AnimationSeries::new(animations)}
+//     }
+// }
 
-    }
-}
+// impl Animator for HexPathing {
+//     fn update(&self, transform: &mut Transform, time: f64) {
+//         self.animations.update(transform, time)
+//     }
 
-impl Animator for HexPathing {
-    fn update(&self, transform: &mut Transform, time: f64) {
-        self.animations.update(transform, time)
-    }
-
-    fn is_finished(&self, time: f64) -> bool {
-        self.animations.is_finished(time)
-    }
-}
+//     fn is_finished(&self, time: f64) -> bool {
+//         self.animations.is_finished(time)
+//     }
+// }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utils ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
 #[inline]
-fn now() -> f64 {
+pub fn now() -> f64 {
     SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as f64
 }
