@@ -39,13 +39,42 @@ fn init_height_map(
 }
 
 #[derive(Component, Inspectable, Debug, Copy, Clone)]
+/// Coordinates in axial space
+/// see: https://www.redblobgames.com/grids/hexagons/#coordinates-axial
+/// HexCoord(q, r)
 pub struct HexCoord(pub i32, pub i32);
 
 impl HexCoord {
+    /// see: https://www.redblobgames.com/grids/hexagons/#hex-to-pixel-axial
     pub fn to_world(&self) -> Vec3 {
         let x = HEX_CIRCUMRADIUS * f32::sqrt(3.0) * ((self.0 as f32) + (self.1 as f32) / 2.0);
         let y = HEX_CIRCUMRADIUS * (3.0/2.0) * (self.1 as f32);
         return Vec3 { x: x, y: 0.0, z: y };
+    }
+    
+    /// Uses just x and z componeents of world coord to convert to hexcoord
+    /// See: https://www.redblobgames.com/grids/hexagons/#pixel-to-hex
+    pub fn from_world(world_coord: Vec3) -> HexCoord {
+        // first convert to hex space
+        let x = (f32::sqrt(3.0)*world_coord.x - world_coord.z) / 3.0 / HEX_CIRCUMRADIUS;
+        let y = ((2.0/3.0) * world_coord.z) / HEX_CIRCUMRADIUS;
+        // then round it to the nearest hex coord
+        HexCoord::from_floating((x,y))
+    }
+
+    /// Round floating point hex space coords to integer hexcoord
+    /// see: https://www.redblobgames.com/grids/hexagons/#rounding
+    pub fn from_floating((fx, fy): (f32, f32)) -> HexCoord {
+        let mut x = fx.round();
+        let mut y = fy.round();
+        let rem_x = fx - x;
+        let rem_y = fy - y;
+        if rem_x.abs() >= rem_y.abs() {
+            x += (rem_x + 0.5*rem_y).round();
+        } else {
+            y += (rem_y + 0.5*rem_x).round();
+        }
+        HexCoord(x as i32, y as i32)
     }
 
     pub fn to_bytes(self) -> [u8; 8] {
@@ -55,8 +84,33 @@ impl HexCoord {
         concat
     }
 
-    // returns all the hex coords that are
-    // within radius number of tiles
+    /// Distance in hex space to other coord.
+    /// See: https://www.redblobgames.com/grids/hexagons/#distances-axial
+    pub fn distance(&self, other: HexCoord) -> u64 {
+        ( (self.0 - other.0).abs()
+        + (self.0 + self.1 - other.0 - other.1).abs()
+        + (self.1 - other.1).abs()
+        ) as u64
+    }
+
+    /// Gets the hexcoords that draw a straight line between self and other
+    /// See: https://www.redblobgames.com/grids/hexagons/#line-drawing
+    pub fn line_between(&self, other: HexCoord) -> Vec<HexCoord> {
+        let start_world = self.to_world();
+        let end_world = self.to_world();
+        
+        let dist = self.distance(other);
+        let mut results = Vec::new();
+        for point in 0..=dist {
+            let inter_world = start_world.lerp(end_world, (point as f32) / (dist as f32));
+            let inter_hex = HexCoord::from_world(inter_world);
+            results.push(inter_hex);
+        }
+        results
+    }
+
+    /// returns all the hex coords that are
+    /// within radius number of tiles
     pub fn within_radius(&self, radius: i32) -> Vec<HexCoord> {
         let mut within = Vec::new();
         for x in -radius..radius+1 {

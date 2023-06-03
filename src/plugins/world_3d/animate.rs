@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use crate::plugins::world_2d::hex::HexCoord;
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ System ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
 pub struct AnimationPlugin;
@@ -92,6 +94,67 @@ impl Animator for LinearMovement {
 
     fn is_finished(&self, time: f64) -> bool {
         time >= self.end_time
+    }
+}
+
+
+
+pub struct AnimationSeries {
+    animators: Vec<Box<dyn Animator>>
+}
+
+impl AnimationSeries {
+    pub fn new(animators: Vec<Box<dyn Animator>>) -> Self {
+        Self { animators }
+    }
+}
+
+impl Animator for AnimationSeries {
+    fn update(&self, transform: &mut Transform, time: f64) {
+        for animator in &self.animators {
+            // if finished go to next
+            if animator.is_finished(time) {
+                continue
+            } else {
+            // if not finished, animate and return
+                animator.update(transform, time);
+                return
+            }
+
+        }
+        // here all finished. so animate last to get to last frame
+        if let Some(animator) = self.animators.last() {
+            animator.update(transform, time)
+        }
+    }
+
+    fn is_finished(&self, time: f64) -> bool {
+        match self.animators.last() {
+            Some(animator) => animator.is_finished(time),
+            None => true
+        }
+    }
+}
+
+
+// TODO: probably rename.
+pub struct HexPathing {
+    animations: AnimationSeries
+}
+
+impl HexPathing {
+    pub fn new(start: HexCoord, end: HexCoord, speed: f32) {
+
+    }
+}
+
+impl Animator for HexPathing {
+    fn update(&self, transform: &mut Transform, time: f64) {
+        self.animations.update(transform, time)
+    }
+
+    fn is_finished(&self, time: f64) -> bool {
+        self.animations.is_finished(time)
     }
 }
 
