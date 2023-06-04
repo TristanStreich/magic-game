@@ -135,7 +135,6 @@ impl PartialEq for HexCoord {
 #[derive(Component, Inspectable)]
 pub struct HexGrid;
 
-
  impl HexGrid {
     fn spawn(
         mut commands: Commands,

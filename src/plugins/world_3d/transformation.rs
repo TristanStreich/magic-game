@@ -10,6 +10,14 @@ use crate::plugins::world_3d::{
     config::HEX_SMALL_DIAMETER,
 };
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utils ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+
+#[inline]
+/// unix time in ms
+pub fn now() -> f64 {
+    SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as f64
+}
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ System ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
 pub struct TransformationPlugin;
@@ -177,6 +185,12 @@ impl HexPathingLine {
     
             if let Some(next_coord) = line.get(i + 1) {
                 let next_pos = next_coord.to_world(Some(map));
+
+                // TODO:
+                // Handle height differences here so we don't clip
+                // Either do a horizontal and vertical movement seperately
+                // or add some kind of bezier curve jump to get over height difference
+
                 let transformer = LinearMovement::new(this_pos, next_pos, speed, now() + move_duration * i as f64);
                 transformers.push(transformer)
             }
@@ -193,11 +207,4 @@ impl Transformer for HexPathingLine {
     fn is_finished(&self, time: f64) -> bool {
         self.transformers.is_finished(time)
     }
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utils ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-
-#[inline]
-pub fn now() -> f64 {
-    SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as f64
 }
