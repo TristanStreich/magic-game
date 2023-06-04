@@ -9,7 +9,7 @@ use bevy_inspector_egui::Inspectable;
 use bevy_mod_picking::{PickableBundle, PickingEvent, SelectionEvent};
 
 use crate::plugins::world_3d::config::{HEX_CIRCUMRADIUS, HEX_GRID_RADIUS};
-use height_map::{HeightMap, PerlinGenerator, PerlinStep, RandGenerator, FlatGenerator};
+use height_map::HeightMap;
 
 pub struct HexPlugin;
 
@@ -69,15 +69,15 @@ fn init_height_map(
     mut commands: Commands,
 ) {
     commands
-    // .insert_resource(HeightMap::new(FlatGenerator::new(1)))
-    // .insert_resource(HeightMap::new(RandGenerator::new(1, 10, None)))
-    // .insert_resource(HeightMap::new(PerlinGenerator::dunes(None)))
-    // .insert_resource(HeightMap::new(PerlinGenerator::hills(None)))
-    // .insert_resource(HeightMap::new(PerlinGenerator::slopes(None)))
-    // .insert_resource(HeightMap::new(PerlinGenerator::crags(None)))
-    .insert_resource(HeightMap::new(PerlinGenerator::lowlands(None)))
-    // .insert_resource(HeightMap::new(PerlinGenerator::new(vec![
-    //     PerlinStep::new(0.05, 0.035, 3.)
+    // .insert_resource(HeightMap::new(height_map::FlatGenerator::new(1)))
+    // .insert_resource(HeightMap::new(height_map::RandGenerator::new(1, 10, None)))
+    // .insert_resource(HeightMap::new(height_map::PerlinGenerator::dunes(None)))
+    // .insert_resource(HeightMap::new(height_map::PerlinGenerator::hills(None)))
+    // .insert_resource(HeightMap::new(height_map::PerlinGenerator::slopes(None)))
+    // .insert_resource(HeightMap::new(height_map::PerlinGenerator::crags(None)))
+    .insert_resource(HeightMap::new(height_map::PerlinGenerator::lowlands(None)))
+    // .insert_resource(HeightMap::new(height_map::PerlinGenerator::new(vec![
+    //     height_map::PerlinStep::new(0.05, 0.035, 3.)
     // ], None)))
     ;
 }
@@ -90,10 +90,14 @@ pub struct HexCoord(pub i32, pub i32);
 
 impl HexCoord {
     /// see: https://www.redblobgames.com/grids/hexagons/#hex-to-pixel-axial
-    pub fn to_world(&self) -> Vec3 {
+    /// 
+    /// Optionally provide height map to get position at the top of the tile.
+    /// Otherwise just set height to 0
+    pub fn to_world(&self, map: Option<&HeightMap>) -> Vec3 {
         let x = HEX_CIRCUMRADIUS * f32::sqrt(3.0) * ((self.0 as f32) + (self.1 as f32) / 2.0);
-        let y = HEX_CIRCUMRADIUS * (3.0/2.0) * (self.1 as f32);
-        return Vec3 { x: x, y: 0.0, z: y };
+        let y = if let Some(map) = map {map.get_world_height(*self)} else {0.};
+        let z = HEX_CIRCUMRADIUS * (3.0/2.0) * (self.1 as f32);
+        return Vec3 { x, y, z };
     }
     
     /// Uses just x and z componeents of world coord to convert to hexcoord
@@ -140,8 +144,8 @@ impl HexCoord {
     /// Gets the hexcoords that draw a straight line between self and other
     /// See: https://www.redblobgames.com/grids/hexagons/#line-drawing
     pub fn line_between(&self, other: HexCoord) -> Vec<HexCoord> {
-        let start_world = self.to_world();
-        let end_world = other.to_world();
+        let start_world = self.to_world(None);
+        let end_world = other.to_world(None);
         
         let dist = self.distance(other);
         let mut results = Vec::new();
@@ -219,8 +223,8 @@ impl HexTile {
         mesh: &Handle<Mesh>,
         material: &Handle<StandardMaterial>
     ) -> Entity {
-        let height = height_map::to_world(height);
-        let mut position = hex_coord.to_world();
+        let height = height_map::to_world(height); //TODO: pass map into here
+        let mut position = hex_coord.to_world(None);
         position.y = height / 2.;
         let scale = Vec3::new(1.,height,1.);
         commands

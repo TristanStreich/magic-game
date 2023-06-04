@@ -22,10 +22,7 @@ use crate::plugins::world_3d::{
     hex::{
         HexCoord,
         HexTile,
-        height_map::{
-            to_world as height_to_world,
-            HeightMap
-        }
+        height_map::HeightMap,
     }
 };
 
@@ -86,12 +83,14 @@ fn player_mover(
 
 fn gen_player_movement_animation(start: Vec3, end: HexCoord, map: &HeightMap) -> Animation {
     let move_duration = (HEX_SMALL_DIAMETER / PLAYER_SPEED) as f64;
-    let line = player_pos_to_hex(start).line_between(end);
+    let line = HexCoord::from_world(start).line_between(end);
     let mut animations = AnimationSeries::new();
+
     for (i, this_coord) in line.iter().enumerate() {
-        let this_pos = player_position(*this_coord, map.get_height(*this_coord));
+        let this_pos = this_coord.to_world(Some(map));
+
         if let Some(next_coord) = line.get(i + 1) {
-            let next_pos = player_position(*next_coord, map.get_height(*next_coord));
+            let next_pos = next_coord.to_world(Some(map));
             let animation = LinearMovement::new(this_pos, next_pos, PLAYER_SPEED, now() + move_duration * i as f64);
             animations.push(animation)
         }
@@ -105,23 +104,13 @@ pub struct Player;
 fn spawn_player(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    assets: Res<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     height_map: Res<HeightMap>
 ) {
     let material = materials.add(Color::rgb(1., 0.2, 0.2).into());
-    let mesh_handle: Handle<Mesh> = asset_server.load("meshes/pieces.glb#Mesh0/Primitive0");
-
-    // let mesh = assets.get_mut(&mesh_handle).unwrap();
-
-    // // center mesh on transform
-    // for attr in mesh.attributes_mut() {
-
-    // }
 
     let coord = HexCoord(0,0);
-    let height = height_map.get_height(coord);
-    let position = player_position(coord, height);
+    let position = coord.to_world(Some(&height_map));
     let scale = Vec3::splat(PLAYER_SCALE);
     commands
         .spawn(PbrBundle {
@@ -135,8 +124,8 @@ fn spawn_player(
         .insert(Name::new("Player"))
         .with_children(|parent| {
             parent.spawn(PbrBundle {
-                mesh: mesh_handle,
-                material,
+                mesh: asset_server.load("meshes/pieces.glb#Mesh0/Primitive0"),
+                material: material.clone(),
                 transform: Transform {
                     translation: Vec3::new(- PLAYER_SCALE, - PLAYER_SCALE, - 10.*PLAYER_SCALE),
                     scale,
@@ -144,28 +133,16 @@ fn spawn_player(
                 },
                 ..default()
             })
-            .insert(PickableBundle::default())
-            ;
+            .insert(PickableBundle::default());
+            parent.spawn(PbrBundle {
+                mesh: asset_server.load("meshes/pieces.glb#Mesh1/Primitive0"),
+                material,
+                transform: Transform {
+                    translation: Vec3::new(- PLAYER_SCALE, - PLAYER_SCALE, - 10.*PLAYER_SCALE),
+                    scale,
+                    ..default()
+                },
+                ..default()
+            });
         });
-}
-
-pub fn player_position(coord: HexCoord, height: u32) -> Vec3 {
-    let height = height_to_world(height);
-    let mut position = coord.to_world();
-    position.y = height;
-    return position;
-    position.y = height - PLAYER_SCALE;
-    position.x -= PLAYER_SCALE;
-    position.z -= 10. * PLAYER_SCALE;
-    position
-}
-
-// FIXME: this function and player_position. Need to go. This is horrible.
-// We need to make it so the mesh is attached to the transform properly on init
-pub fn player_pos_to_hex(mut player_pos: Vec3) -> HexCoord {
-    return HexCoord::from_world(player_pos);
-    player_pos.z += 10. * PLAYER_SCALE;
-    player_pos.x -= PLAYER_SCALE;
-
-    HexCoord::from_world(player_pos)
 }
