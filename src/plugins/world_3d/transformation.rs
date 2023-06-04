@@ -1,3 +1,4 @@
+//! Plugin for handling entity movement
 use bevy::prelude::*;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -11,23 +12,23 @@ use crate::plugins::world_3d::{
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ System ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-pub struct AnimationPlugin;
-impl Plugin for AnimationPlugin {
+pub struct TransformationPlugin;
+impl Plugin for TransformationPlugin {
     fn build(&self, app: &mut App) {
         app
-        .add_system(animate);
+        .add_system(transformation_driver);
     }
 }
 
-fn animate(
+fn transformation_driver(
     mut commands: Commands,
-    mut anim_query: Query<(Entity, &mut Transform, &mut Animation)>
+    mut query: Query<(Entity, &mut Transform, &mut Transformation)>
 ) {
     let curr_time = now();
-    for (entity, mut transform, animation) in anim_query.iter_mut() {
-        animation.animate(transform.as_mut(), curr_time);
-        if animation.is_finished(curr_time) {
-            commands.entity(entity).remove::<Animation>();
+    for (entity, mut transform, transformation) in query.iter_mut() {
+        transformation.update(&mut transform, curr_time);
+        if transformation.is_finished(curr_time) {
+            commands.entity(entity).remove::<Transformation>();
         }
     }
 }
@@ -36,35 +37,43 @@ fn animate(
 
 
 #[derive(Component)]
-pub struct Animation {
-    animator: Box<dyn Animator>
+/// Wrapper Struct for Transformer which allows Transformers to be queried as a component
+pub struct Transformation {
+    transformer: Box<dyn Transformer>
 }
 
-impl Animation {
+impl Transformation {
 
-    pub fn new(animator: impl Animator) -> Self {
-        Self { animator: Box::new(animator) }
+    pub fn new(transformer: impl Transformer) -> Self {
+        Self { transformer: Box::new(transformer) }
     }
 
-    pub fn animate(&self, transform: &mut Transform, curr_time: f64) {
-        self.animator.update(transform, curr_time);
+    pub fn update(&self, transform: &mut Transform, curr_time: f64) {
+        self.transformer.update(transform, curr_time);
     }
 
     pub fn is_finished(&self, curr_time: f64) -> bool {
-        self.animator.is_finished(curr_time)
+        self.transformer.is_finished(curr_time)
     }
 
 }
 
-impl<A: Animator> From<A> for Animation {
-    fn from(value: A) -> Self {
+impl<T: Transformer> From<T> for Transformation {
+    fn from(value: T) -> Self {
         Self::new(value)
     }
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Inner Trait ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-pub trait Animator: Send + Sync + 'static {
+pub trait Transformer: Send + Sync + 'static {
+    /// Edits a transform based on a time.
+    /// 
+    /// time: unix_time in ms
+    /// 
+    /// If a time that is passed in is after the ending time of this transformer then
+    /// the transformer should update the transformer to min(time, transformer.end_time)
+    /// rather than going past its desired ending position
     fn update(&self, transform: &mut Transform, time: f64);
     fn is_finished(&self, time: f64) -> bool;
 }
@@ -95,7 +104,7 @@ impl LinearMovement {
     }
 }
 
-impl Animator for LinearMovement {
+impl Transformer for LinearMovement {
 
     fn update(&self, transform: &mut Transform, time: f64) {
         let time = f64::min(time, self.end_time);
@@ -110,80 +119,79 @@ impl Animator for LinearMovement {
 }
 
 
-
-pub struct AnimationSeries {
-    animators: Vec<Box<dyn Animator>>
+pub struct TransformerSeries {
+    transformers: Vec<Box<dyn Transformer>>
 }
 
-impl AnimationSeries {
+impl TransformerSeries {
     pub fn new() -> Self {
-        Self { animators: Vec::new() }
+        Self { transformers: Vec::new() }
     }
 
-    pub fn push(&mut self, animator: impl Animator) {
-        self.animators.push(Box::new(animator))
+    pub fn push(&mut self, transformer: impl Transformer) {
+        self.transformers.push(Box::new(transformer))
     }
 }
 
-impl Animator for AnimationSeries {
+impl Transformer for TransformerSeries {
     fn update(&self, transform: &mut Transform, time: f64) {
-        for animator in &self.animators {
+        for transformer in &self.transformers {
             // if finished go to next
-            if animator.is_finished(time) {
+            if transformer.is_finished(time) {
                 continue
             } else {
-                // if not finished, animate and return
-                animator.update(transform, time);
+                // if not finished, update and return
+                transformer.update(transform, time);
                 return
             }
 
         }
-        // here all finished. so animate last to get to last frame
-        if let Some(animator) = self.animators.last() {
-            animator.update(transform, time)
+        // here all finished. so update last to get to final state
+        if let Some(transformer) = self.transformers.last() {
+            transformer.update(transform, time)
         }
     }
 
     fn is_finished(&self, time: f64) -> bool {
-        match self.animators.last() {
-            Some(animator) => animator.is_finished(time),
+        match self.transformers.last() {
+            Some(transformer) => transformer.is_finished(time),
             None => true
         }
     }
 }
 
-
-// // TODO: probably rename.
+/// Moves piece from its starting coord to another coord,
+/// moving to intermediate tiles along a straight line bewteen the two
 pub struct HexPathingLine {
-    animations: AnimationSeries
+    transformers: TransformerSeries
 }
 
 impl HexPathingLine {
     pub fn new(start: HexCoord, end: HexCoord, speed: f32, map: &HeightMap) -> HexPathingLine {
         let move_duration = (HEX_SMALL_DIAMETER / speed) as f64;
         let line = start.line_between(end);
-        let mut animations = AnimationSeries::new();
+        let mut transformers = TransformerSeries::new();
     
         for (i, this_coord) in line.iter().enumerate() {
             let this_pos = this_coord.to_world(Some(map));
     
             if let Some(next_coord) = line.get(i + 1) {
                 let next_pos = next_coord.to_world(Some(map));
-                let animation = LinearMovement::new(this_pos, next_pos, speed, now() + move_duration * i as f64);
-                animations.push(animation)
+                let transformer = LinearMovement::new(this_pos, next_pos, speed, now() + move_duration * i as f64);
+                transformers.push(transformer)
             }
         }
-        Self { animations }
+        Self { transformers }
     }
 }
 
-impl Animator for HexPathingLine {
+impl Transformer for HexPathingLine {
     fn update(&self, transform: &mut Transform, time: f64) {
-        self.animations.update(transform, time)
+        self.transformers.update(transform, time)
     }
 
     fn is_finished(&self, time: f64) -> bool {
-        self.animations.is_finished(time)
+        self.transformers.is_finished(time)
     }
 }
 

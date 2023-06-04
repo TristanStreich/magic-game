@@ -8,8 +8,8 @@ use bevy_mod_picking::{
 };
 
 use crate::plugins::world_3d::{
-    animate::{
-        Animation,
+    transformation::{
+        Transformation,
         HexPathingLine,
     },
     config::{
@@ -71,7 +71,7 @@ fn player_mover(
     if let (Some(tile_coord), Some(player_e)) = (move_to, player_to_move) {
         let player = player_query.get(player_e);
         if let Ok((entity, transform, _)) = player {
-            let animation: Animation = HexPathingLine::new(
+            let animation: Transformation = HexPathingLine::new(
                 HexCoord::from_world(transform.translation),
                 tile_coord,
                 PLAYER_SPEED,

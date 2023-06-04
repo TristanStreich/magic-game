@@ -199,8 +199,7 @@ pub struct PickedMaterial(Handle<StandardMaterial>);
 
         let mut tiles = Vec::new();
         for hex_coord in HexCoord(0,0).within_radius(HEX_GRID_RADIUS).into_iter() {
-            let height = height_map.get_height(hex_coord);
-            let tile = HexTile::spawn(hex_coord, height, &mut commands, &hex_tile_mesh, &tile_material);
+            let tile = HexTile::spawn(hex_coord, &height_map, &mut commands, &hex_tile_mesh, &tile_material);
             tiles.push(tile);
         }
         commands
@@ -218,12 +217,12 @@ pub struct HexTile;
 impl HexTile {
     fn spawn(
         hex_coord: HexCoord,
-        height: u32,
+        height_map: &HeightMap,
         commands: &mut Commands,
         mesh: &Handle<Mesh>,
         material: &Handle<StandardMaterial>
     ) -> Entity {
-        let height = height_map::to_world(height); //TODO: pass map into here
+        let height = height_map.get_world_height(hex_coord);
         let mut position = hex_coord.to_world(None);
         position.y = height / 2.;
         let scale = Vec3::new(1.,height,1.);
