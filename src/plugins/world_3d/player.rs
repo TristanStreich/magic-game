@@ -43,7 +43,7 @@ impl Plugin for PlayerPlugin {
 fn player_mover(
     mut commands: Commands,
     mut events: EventReader<PickingEvent>,
-    player_query: Query<(Entity, &Transform), With<Player>>,
+    player_query: Query<(Entity, &Transform, &Children), With<Player>>,
     tile_query: Query<&HexCoord, With<HexTile>>,
     height_map: Res<HeightMap>
 ) {
@@ -59,9 +59,13 @@ fn player_mover(
                         move_to = Some(tile_coord.clone());
                     }
                 },
-                SelectionEvent::JustDeselected(e) => {
-                    if player_query.contains(*e) {
-                        player_to_move = Some(e.clone());
+                SelectionEvent::JustDeselected(picked_entity) => {
+                    // pickable bundle is on the child entity of player so check children
+                    // TODO: just select tile and then check if any player is on tile
+                    for (e, _, children) in player_query.iter() {
+                        if children.contains(picked_entity) {
+                            player_to_move = Some(e.clone())
+                        }
                     }
                 }
             }
@@ -70,14 +74,12 @@ fn player_mover(
 
 
     // now if both player deselected and tile selected, move player to tile
-    if let Some(tile_coord) = move_to {
-        if let Some(player_e) = player_to_move {
-            let player = player_query.get(player_e);
-            if let Ok((entity, transform)) = player {
-                let animation = gen_player_movement_animation(transform.translation, tile_coord, &height_map);
-                commands.entity(entity).insert(animation);
-                // transform.translation = player_position(tile_coord, height);
-            }
+    if let (Some(tile_coord), Some(player_e)) = (move_to, player_to_move) {
+        let player = player_query.get(player_e);
+        if let Ok((entity, transform, _)) = player {
+            let animation = gen_player_movement_animation(transform.translation, tile_coord, &height_map);
+            commands.entity(entity).insert(animation);
+            // transform.translation = player_position(tile_coord, height);
         }
     }
 }
@@ -102,12 +104,20 @@ pub struct Player;
 
 fn spawn_player(
     mut commands: Commands,
-    assets: Res<AssetServer>,
+    asset_server: Res<AssetServer>,
+    assets: Res<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     height_map: Res<HeightMap>
 ) {
     let material = materials.add(Color::rgb(1., 0.2, 0.2).into());
-    let mesh: Handle<Mesh> = assets.load("meshes/pieces.glb#Mesh0/Primitive0");
+    let mesh_handle: Handle<Mesh> = asset_server.load("meshes/pieces.glb#Mesh0/Primitive0");
+
+    // let mesh = assets.get_mut(&mesh_handle).unwrap();
+
+    // // center mesh on transform
+    // for attr in mesh.attributes_mut() {
+
+    // }
 
     let coord = HexCoord(0,0);
     let height = height_map.get_height(coord);
@@ -115,23 +125,35 @@ fn spawn_player(
     let scale = Vec3::splat(PLAYER_SCALE);
     commands
         .spawn(PbrBundle {
-            mesh: mesh.clone(),
-            material: material.clone(),
             transform: Transform {
                 translation: position,
-                scale,
                 ..default()
             },
             ..default()
         })
-        .insert(Name::new("Player"))
         .insert(Player)
-        .insert(PickableBundle::default());
+        .insert(Name::new("Player"))
+        .with_children(|parent| {
+            parent.spawn(PbrBundle {
+                mesh: mesh_handle,
+                material,
+                transform: Transform {
+                    translation: Vec3::new(- PLAYER_SCALE, - PLAYER_SCALE, - 10.*PLAYER_SCALE),
+                    scale,
+                    ..default()
+                },
+                ..default()
+            })
+            .insert(PickableBundle::default())
+            ;
+        });
 }
 
 pub fn player_position(coord: HexCoord, height: u32) -> Vec3 {
     let height = height_to_world(height);
     let mut position = coord.to_world();
+    position.y = height;
+    return position;
     position.y = height - PLAYER_SCALE;
     position.x -= PLAYER_SCALE;
     position.z -= 10. * PLAYER_SCALE;
@@ -141,6 +163,7 @@ pub fn player_position(coord: HexCoord, height: u32) -> Vec3 {
 // FIXME: this function and player_position. Need to go. This is horrible.
 // We need to make it so the mesh is attached to the transform properly on init
 pub fn player_pos_to_hex(mut player_pos: Vec3) -> HexCoord {
+    return HexCoord::from_world(player_pos);
     player_pos.z += 10. * PLAYER_SCALE;
     player_pos.x -= PLAYER_SCALE;
 
