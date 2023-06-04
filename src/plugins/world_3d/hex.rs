@@ -17,51 +17,7 @@ impl Plugin for HexPlugin {
     fn build(&self, app: &mut App) {
         app
         .add_startup_system_to_stage(StartupStage::PreStartup, init_height_map)
-        .add_startup_system(HexGrid::spawn)
-        // .add_system(line_drawer)
-        ;
-    }
-}
-
-fn line_drawer( //TODO: remove this. This is for debugging lines
-    picked_material: Res<PickedMaterial>,
-    mut events: EventReader<PickingEvent>,
-    mut tile_query: Query<(&HexCoord, &mut Handle<StandardMaterial>), With<HexTile>>,
-) {
-    let mut start_line: Option<HexCoord> = None;
-    let mut end_line: Option<HexCoord> = None;
-    // first check all events
-    // looking for tile deselected and tile selected
-    for event in events.iter() {
-        if let PickingEvent::Selection(selection) = event {
-            match selection {
-                SelectionEvent::JustSelected(e) => {
-                    if let Ok((tile_coord, _)) = tile_query.get(*e) {
-                        println!("Selected! {tile_coord:?}");
-                        end_line = Some(tile_coord.clone());
-                    }
-                },
-                SelectionEvent::JustDeselected(e) => {
-                    if let Ok((tile_coord, _)) = tile_query.get(*e) {
-                        println!("Deselected! {tile_coord:?}");
-                        start_line = Some(tile_coord.clone());
-                    }
-                }
-            }
-        }
-    }
-
-    if let (Some(start), Some(end)) = (start_line, end_line) {
-        println!("Got Both");
-        let line = start.line_between(end);
-
-        println!("Found Line: {line:#?}");
-    
-        for (coord, mut material) in tile_query.iter_mut() {
-            if line.contains(coord) {
-                *material = picked_material.0.clone();
-            }
-        }
+        .add_startup_system(HexGrid::spawn);
     }
 }
 
@@ -179,8 +135,6 @@ impl PartialEq for HexCoord {
 #[derive(Component, Inspectable)]
 pub struct HexGrid;
 
-#[derive(Resource)]
-pub struct PickedMaterial(Handle<StandardMaterial>);
 
  impl HexGrid {
     fn spawn(
@@ -189,10 +143,6 @@ pub struct PickedMaterial(Handle<StandardMaterial>);
         mut materials: ResMut<Assets<StandardMaterial>>,
         height_map: Res<HeightMap>
     ) {
-
-        let picked_material = materials.add(Color::rgb(0.,0.,0.8).into()); //TODO: remove. This is for debugging lines
-
-        commands.insert_resource(PickedMaterial(picked_material));
 
         let tile_material = materials.add(Color::rgb(1., 0.8, 0.8).into());
         let hex_tile_mesh: Handle<Mesh> = assets.load("meshes/hex.glb#Mesh0/Primitive0");
