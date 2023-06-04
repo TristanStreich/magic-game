@@ -6,8 +6,8 @@ use crate::plugins::world_3d::{
     hex::HexCoord
 };
 
-// hashes bytes with seed using msg
-// to distinguish it from other hashes on same bytes
+/// hashes bytes with seed using msg
+/// to distinguish it from other hashes on same bytes
 pub fn seeded_hash(bytes: &[u8], seed: u64, msg: &str) -> u64 {
     let mut vec = bytes.to_vec();
     let msg_bytes =  msg.as_bytes();
@@ -16,6 +16,7 @@ pub fn seeded_hash(bytes: &[u8], seed: u64, msg: &str) -> u64 {
     xxh3_64_with_seed(vec.as_slice(), seed)
 }
 
+/// Convert quantized height to height in world space
 pub fn to_world(height: u32) -> f32 {
     (height as f32) * HEX_HEIGHT_SCALE
 }
@@ -28,8 +29,15 @@ pub struct HeightMap {
 }
 
 impl HeightMap {
+    /// returns as a quantized integer. To get this as height in world space. Use `get_world_height`
     pub fn get_height(&self, coord: HexCoord) -> u32 {
         std::cmp::max(self.generator.generate_height(coord), 1)
+    }
+
+    /// gets height of coord in world space. To get quantized height use `get_height`
+    pub fn get_world_height(&self, coord: HexCoord) -> f32 {
+        let q_height = self.get_height(coord);
+        to_world(q_height)
     }
 
     pub fn new(generator: impl HeightGenerator) -> Self {
