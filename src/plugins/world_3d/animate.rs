@@ -1,9 +1,12 @@
 use bevy::prelude::*;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use crate::plugins::world_3d::hex::{
-    HexCoord,
-    height_map::HeightMap
+use crate::plugins::world_3d::{
+    hex::{
+        HexCoord,
+        height_map::HeightMap,
+    },
+    config::HEX_SMALL_DIAMETER,
 };
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ System ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
@@ -53,6 +56,12 @@ impl Animation {
 
 }
 
+impl<A: Animator> From<A> for Animation {
+    fn from(value: A) -> Self {
+        Self::new(value)
+    }
+}
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Inner Trait ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
 pub trait Animator: Send + Sync + 'static {
@@ -60,6 +69,7 @@ pub trait Animator: Send + Sync + 'static {
     fn is_finished(&self, time: f64) -> bool;
 }
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~ Trait Implementors ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
 #[derive(Debug)]
 pub struct LinearMovement {
@@ -144,33 +154,38 @@ impl Animator for AnimationSeries {
 
 
 // // TODO: probably rename.
-// pub struct HexPathing {
-//     animations: AnimationSeries
-// }
+pub struct HexPathingLine {
+    animations: AnimationSeries
+}
 
-// impl HexPathing {
-//     pub fn new(start: HexCoord, end: HexCoord, speed: f32, height_map: HeightMap) -> HexPathing {
-//         let line = start.line_between(end);
-//         let mut animations: Vec<Box<dyn Animator>> = vec![];
-//         for (i, coord) in line.iter().enumerate() {
-//             if let Some(next) = line.get(i) {
-//                 let animation = LinearMovement::new(coord.to_world(), next.to_world(), speed);
-//                 animations.push(Box::new(animation))
-//             }
-//         }
-//         Self {animations: AnimationSeries::new(animations)}
-//     }
-// }
+impl HexPathingLine {
+    pub fn new(start: HexCoord, end: HexCoord, speed: f32, map: &HeightMap) -> HexPathingLine {
+        let move_duration = (HEX_SMALL_DIAMETER / speed) as f64;
+        let line = start.line_between(end);
+        let mut animations = AnimationSeries::new();
+    
+        for (i, this_coord) in line.iter().enumerate() {
+            let this_pos = this_coord.to_world(Some(map));
+    
+            if let Some(next_coord) = line.get(i + 1) {
+                let next_pos = next_coord.to_world(Some(map));
+                let animation = LinearMovement::new(this_pos, next_pos, speed, now() + move_duration * i as f64);
+                animations.push(animation)
+            }
+        }
+        Self { animations }
+    }
+}
 
-// impl Animator for HexPathing {
-//     fn update(&self, transform: &mut Transform, time: f64) {
-//         self.animations.update(transform, time)
-//     }
+impl Animator for HexPathingLine {
+    fn update(&self, transform: &mut Transform, time: f64) {
+        self.animations.update(transform, time)
+    }
 
-//     fn is_finished(&self, time: f64) -> bool {
-//         self.animations.is_finished(time)
-//     }
-// }
+    fn is_finished(&self, time: f64) -> bool {
+        self.animations.is_finished(time)
+    }
+}
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Utils ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 

@@ -10,14 +10,11 @@ use bevy_mod_picking::{
 use crate::plugins::world_3d::{
     animate::{
         Animation,
-        LinearMovement,
-        AnimationSeries,
-        now,
+        HexPathingLine,
     },
     config::{
         PLAYER_SCALE,
         PLAYER_SPEED,
-        HEX_SMALL_DIAMETER,
     },
     hex::{
         HexCoord,
@@ -74,28 +71,15 @@ fn player_mover(
     if let (Some(tile_coord), Some(player_e)) = (move_to, player_to_move) {
         let player = player_query.get(player_e);
         if let Ok((entity, transform, _)) = player {
-            let animation = gen_player_movement_animation(transform.translation, tile_coord, &height_map);
+            let animation: Animation = HexPathingLine::new(
+                HexCoord::from_world(transform.translation),
+                tile_coord,
+                PLAYER_SPEED,
+                &height_map
+            ).into();
             commands.entity(entity).insert(animation);
-            // transform.translation = player_position(tile_coord, height);
         }
     }
-}
-
-fn gen_player_movement_animation(start: Vec3, end: HexCoord, map: &HeightMap) -> Animation {
-    let move_duration = (HEX_SMALL_DIAMETER / PLAYER_SPEED) as f64;
-    let line = HexCoord::from_world(start).line_between(end);
-    let mut animations = AnimationSeries::new();
-
-    for (i, this_coord) in line.iter().enumerate() {
-        let this_pos = this_coord.to_world(Some(map));
-
-        if let Some(next_coord) = line.get(i + 1) {
-            let next_pos = next_coord.to_world(Some(map));
-            let animation = LinearMovement::new(this_pos, next_pos, PLAYER_SPEED, now() + move_duration * i as f64);
-            animations.push(animation)
-        }
-    }
-    Animation::new(animations)
 }
 
 #[derive(Component, Inspectable)]
